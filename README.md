@@ -1,1 +1,1 @@
-Aku bantai ngoding 2026
+Baca aku

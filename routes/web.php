@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Livewire\Auth\Login;
 use App\Livewire\Dashboard; // Import Class Dashboard Baru
 use App\Livewire\Siswa; 
+use App\Livewire\Profile; 
 use Illuminate\Support\Facades\Auth;
 
 Route::get('/', function () {
@@ -18,6 +19,7 @@ Route::middleware('auth')->group(function () {
     // Arahkan ke Class Dashboard, bukan view biasa
     Route::get('/dashboard', Dashboard::class)->name('dashboard');
     Route::get('/siswa', Siswa::class)->name('siswa');
+    Route::get('/profile', Profile::class)->name('profile');
 
     // Route Logout (Wajib ada biar tombol di sidebar jalan)
     Route::post('/logout', function () {

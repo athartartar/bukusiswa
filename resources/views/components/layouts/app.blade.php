@@ -60,12 +60,11 @@
                 </nav>
 
                 <div class="p-4 border-t border-white/10 mb-2">
-<button id="logoutButton"
-    class="flex w-full items-center px-4 py-3 text-red-300 hover:bg-red-500/25 hover:text-red-200 rounded-lg transition-colors">
-    <i data-lucide="log-out" class="w-5 h-5 mr-3"></i>
-    <span class="font-medium">Logout</span>
-</button>
-
+                    <button id="logoutButton"
+                        class="flex w-full items-center px-4 py-3 text-red-300 hover:bg-red-500/25 hover:text-red-200 rounded-lg transition-colors">
+                        <i data-lucide="log-out" class="w-5 h-5 mr-3"></i>
+                        <span class="font-medium">Logout</span>
+                    </button>
                 </div>
             </div>
         </aside>
@@ -80,6 +79,7 @@
                 </div>
 
                 <div class="flex items-center space-x-4">
+                    <a href="/profile" class=" transition-opacity">
                     <div class="flex items-center space-x-2">
                         <div class="text-right hidden md:block">
                             <p class="text-sm font-bold text-gray-700">{{ Auth::user()->namalengkap ?? 'User' }}</p>
@@ -89,6 +89,7 @@
                             {{ substr(Auth::user()->namalengkap ?? 'U', 0, 1) }}
                         </div>
                     </div>
+                    </a>
                 </div>
             </header>
 
@@ -155,21 +156,21 @@
                 </span>
             </a>
 
-            <a href="/profil" class="relative flex flex-col items-center justify-center w-full h-full group">
-                @if(Request::routeIs('profil'))
+            <a href="/profile" class="relative flex flex-col items-center justify-center w-full h-full group">
+                @if(Request::routeIs('profile'))
                 <span class="absolute top-2 w-1 h-1 bg-[#37517e] rounded-full shadow-sm"></span>
                 @endif
 
-                <div class="transition-all duration-300 ease-out {{ Request::routeIs('profil') ? '-translate-y-2' : '' }}">
+                <div class="transition-all duration-300 ease-out {{ Request::routeIs('profile') ? '-translate-y-2' : '' }}">
                     <i data-lucide="user"
                         class="w-6 h-6 transition-colors duration-300 
-                       {{ Request::routeIs('profil') ? 'text-[#37517e] fill-[#37517e]/20' : 'text-gray-400 group-hover:text-gray-600' }}">
+                       {{ Request::routeIs('profile') ? 'text-[#37517e] fill-[#37517e]/20' : 'text-gray-400 group-hover:text-gray-600' }}">
                     </i>
                 </div>
 
                 <span class="absolute bottom-2 text-[10px] font-bold text-[#37517e] transition-all duration-300 
-                      {{ Request::routeIs('profil') ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none' }}">
-                    Profil
+                      {{ Request::routeIs('profile') ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none' }}">
+                    Profile
                 </span>
             </a>
 

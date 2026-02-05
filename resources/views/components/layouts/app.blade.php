@@ -20,13 +20,13 @@
         <aside class="absolute inset-y-0 left-0 z-50 w-64 bg-[#37517e] text-white transition-transform duration-300 transform md:relative md:translate-x-0"
             :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'">
 
-            <div class="flex items-center justify-center h-16 border-b border-white/10 bg-[#2a3f63]">
-                <span class="text-xl font-bold tracking-wide">BUKUSISWA</span>
+            <div class="flex items-center justify-center h-18 border-b border-white/10 bg-[#2a3f63]">
+                <i data-lucide = "book-open-text"></i><span class="ml-3 text-lg font-bold tracking-wide">BUKUSISWA</span>
             </div>
 
             <nav class="mt-5 px-4 space-y-2">
                 <a href="/dashboard" class="flex items-center px-4 py-3 bg-white/10 rounded-lg text-white group transition-colors">
-                    <i data-lucide="layout-dashboard" class="w-5 h-5 mr-3"></i>
+                    <i data-lucide="house" class="w-5 h-5 mr-3"></i>
                     <span class="font-medium">Dashboard</span>
                 </a>
 

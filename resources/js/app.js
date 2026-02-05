@@ -189,3 +189,39 @@ function renderCharts() {
         chartInstance2.render();
     }
 }
+
+// Animasi laod Login
+document.addEventListener("DOMContentLoaded", function () {
+
+    const kiri = document.getElementById('leftPanel');
+    const kanan = document.getElementById('rightPanel');
+
+    setTimeout(() => {
+        kiri.classList.remove('-translate-x-full', 'opacity-0');
+        kanan.classList.remove('translate-x-full', 'opacity-0');
+
+        kiri.classList.add('enter-left');
+        kanan.classList.add('enter-right');
+    }, 150);
+
+});
+
+// Animasi berhasil login
+document.addEventListener("livewire:init", () => {
+
+    Livewire.on('loginSuccess', () => {
+
+        const kiri = document.getElementById('leftPanel');
+        const kanan = document.getElementById('rightPanel');
+        const wrap = document.getElementById('loginWrapper');
+
+        kiri.classList.add('swipe-left');
+        kanan.classList.add('swipe-right');
+        wrap.classList.add('fade-white');
+
+        setTimeout(() => {
+            window.location.href = "/dashboard";
+        }, 700);
+    });
+
+});

@@ -1,8 +1,8 @@
-<div class="min-h-screen flex">
+<div id="loginWrapper" class="min-h-screen flex bg-white overflow-hidden">
 
-    <div class="hidden md:flex w-1/2 relative bg-[#37517e] items-center justify-center p-10 overflow-hidden">
-        <div class="absolute inset-0 bg-center bg-cover opacity-10"
-            style="background-image: url('/images/upnvj.jpg');">
+    <div id="leftPanel" class="hidden md:flex w-1/2 relative bg-[#37517e] items-center justify-center p-10 overflow-hidden
+transition-all duration-700 -translate-x-full opacity-0">
+        <div class="absolute inset-0 bg-center bg-cover opacity-10" style="background-image: url('/images/upnvj.jpg');">
         </div>
 
         <div class="relative z-10 text-white text-center max-w-md">
@@ -12,9 +12,14 @@
         </div>
     </div>
 
-    <div class="w-full md:w-1/2 flex items-center justify-center p-6">
+    <div id="rightPanel" class="w-full md:w-1/2 flex items-center justify-center p-6 transition-all duration-700 translate-x-full opacity-0">
+        <div class="md:hidden absolute top-40 left-1/2 -translate-x-1/2 text-center">
+            <img src="/images/logosmk.png" alt="Logo" class="mx-auto mb-3 w-20 h-auto">
+            <h1 class="text-xl font-bold text-[#37517e]">Selamat Datang</h1>
+            <p class="text-xs text-gray-500">Silakan login untuk melanjutkan</p>
+        </div>
 
-        <div class="w-full max-w-sm
+        <div class="w-full max-w-sm z-10 mt-32 md:mt-0
                     border-[#37517e] border-2
                     p-8 rounded-xl shadow-xl hover:shadow-2xl transition-shadow duration-300
                     min-h-[360px]
@@ -42,11 +47,7 @@
                             <i data-lucide="at-sign" class="w-4 h-4"></i>
                         </span>
 
-                        <input
-                            wire:model="username"
-                            type="number"
-                            placeholder="Masukkan username..."
-                            class="peer w-full text-sm
+                        <input wire:model="username" type="number" placeholder="Masukkan username..." class="peer w-full text-sm
                                    rounded-lg
                                    pl-8 pr-3 py-2.5
                                    bg-[#fafafa]
@@ -77,11 +78,8 @@
                             <i data-lucide="lock" class="w-4 h-4"></i>
                         </span>
 
-                        <input
-                            wire:model="password"
-                            :type="show ? 'text' : 'password'"
-                            placeholder="Masukkan password.."
-                            class="peer w-full text-sm
+                        <input wire:model="password" :type="show ? 'text' : 'password'"
+                            placeholder="Masukkan password.." class="peer w-full text-sm
                                    rounded-lg
                                    pl-9 pr-10 py-2.5
                                    bg-[#fafafa]
@@ -99,9 +97,7 @@
                                    focus:ring-1
                                    focus:ring-[#37517e]/30">
 
-                        <button
-                            type="button"
-                            @click="show = !show"
+                        <button type="button" @click="show = !show"
                             class="absolute inset-y-0 right-0 px-3 flex items-center text-gray-400 hover:text-[#37517e] focus:outline-none">
 
                             <i x-show="!show" data-lucide="eye" class="w-5 h-5"></i>
@@ -111,8 +107,7 @@
                     @error('password') <span class="text-xs text-red-600 mt-1 block">{{ $message }}</span> @enderror
                 </div>
 
-                <button type="submit"
-                    class="w-full mt-2
+                <button type="submit" class="w-full mt-2
                            bg-[#37517e] text-white
                            py-2.5 rounded-lg
                            font-semibold text-sm

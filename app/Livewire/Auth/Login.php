@@ -39,7 +39,8 @@ class Login extends Component
 
         if (Auth::attempt(['username' => $this->username, 'password' => $this->password])) {
             session()->regenerate();
-            return redirect()->intended('/dashboard');
+            $this->dispatch('loginSuccess');
+            return;
         }
 
         $this->addError('username', 'Username atau password salah.');

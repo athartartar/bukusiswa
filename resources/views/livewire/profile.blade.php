@@ -1,4 +1,5 @@
 <div class="gsap-card opacity-0 translate-y-10 bg-white text-white p-4 md:p-8 rounded-2xl shadow-2xl mb-8 w-full" id="profile-container">
+    <x-slot name="header">Profile</x-slot>
     <div class="relative mb-32 md:mb-24"> 
         <div class="h-32 w-full bg-[#466291] rounded-t-xl opacity-80"></div>
         

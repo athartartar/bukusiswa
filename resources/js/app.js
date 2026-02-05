@@ -2,7 +2,6 @@ import "./bootstrap";
 
 import gsap from "gsap";
 
-
 document.addEventListener("DOMContentLoaded", () => {
     if (window.lucide) {
         lucide.createIcons();
@@ -195,70 +194,149 @@ function renderCharts() {
 
 // Animasi Masuk (Initial Load)
 document.addEventListener("DOMContentLoaded", function () {
-    const kiri = document.getElementById('leftPanel');
-    const kanan = document.getElementById('rightPanel');
-
+    const kiri = document.getElementById("leftPanel");
+    const kanan = document.getElementById("rightPanel");
 
     // Kita set posisi awal (from) dan biarkan GSAP menganimasikan ke posisi asli
-    gsap.fromTo(kiri,
-        { x: '-100%', opacity: 0 },
-        { x: '0%', opacity: 1, duration: 1.2, ease: "power4.out", delay: 0.2 }
+    gsap.fromTo(
+        kiri,
+        { x: "-100%", opacity: 0 },
+        { x: "0%", opacity: 1, duration: 1.2, ease: "power4.out", delay: 0.2 },
     );
 
-    gsap.fromTo(kanan,
-        { x: '100%', opacity: 0 },
-        { x: '0%', opacity: 1, duration: 1.2, ease: "power4.out", delay: 0.2 }
+    gsap.fromTo(
+        kanan,
+        { x: "100%", opacity: 0 },
+        { x: "0%", opacity: 1, duration: 1.2, ease: "power4.out", delay: 0.2 },
     );
 });
 
 // Animasi Berhasil Login (Exit Animation)
+// Di file JS Login
 document.addEventListener("livewire:init", () => {
+    Livewire.on("loginSuccess", () => {
+        const kiri = document.getElementById("leftPanel");
+        const kanan = document.getElementById("rightPanel");
+        const wrap = document.getElementById("loginWrapper");
 
-    Livewire.on('loginSuccess', () => {
-        // Ambil elemen di dalam scope event ini
-        const kiri = document.getElementById('leftPanel');
-        const kanan = document.getElementById('rightPanel');
-        const wrap = document.getElementById('loginWrapper');
-
-        // Penting: Hapus class transisi Tailwind bawaan jika masih tersisa
-        // Agar tidak terjadi konflik durasi
-        [kiri, kanan].forEach(el => {
-            if (el) el.style.transition = 'none';
+        // Hapus transisi CSS bawaan agar GSAP ambil alih total
+        [kiri, kanan].forEach((el) => {
+            if (el) el.style.transition = "none";
         });
 
         const tl = gsap.timeline({
             onComplete: () => {
                 window.location.href = "/dashboard";
-            }
+            },
         });
 
+        // EFEK MEMBELAH (Cepat & Tajam)
         tl.to(kiri, {
-            xPercent: -100, // Menggunakan xPercent lebih stabil untuk layout responsif
+            xPercent: -100,
             opacity: 0,
-            duration: 0.5,
-            ease: "expo.in"
+            duration: 0.7, // Dipercepat biar snappy
+            ease: "expo.in", // Akselerasi keluar (makin lama makin cepat)
         })
-            .to(kanan, {
-                xPercent: 100,
-                opacity: 0,
-                duration: 0.8,
-                ease: "expo.in"
-            }, "<") // Mulai bersamaan dengan panel kiri
-            .to(wrap, {
-                backgroundColor: "#ffffff",
-                duration: 0.4
-            }, "-=0.4");
+            .to(
+                kanan,
+                {
+                    xPercent: 100,
+                    opacity: 0,
+                    duration: 0.7,
+                    ease: "expo.in",
+                },
+                "<",
+            ) // Jalan bareng kiri
+
+            // Background memutih sedikit lebih cepat agar mata siap ke dashboard
+            .to(
+                wrap,
+                {
+                    backgroundColor: "#f3f4f6", // Sesuaikan dengan warna BG Dashboard kamu
+                    duration: 0.4,
+                },
+                "-=0.5",
+            );
     });
 });
 
 // Animasi sidebar login
+// Di file JS Dashboard / app.js
 document.addEventListener("DOMContentLoaded", function () {
-    const sidebarlogin = document.getElementById('sidebar');
+    const sidebar = document.getElementById("sidebar");
+    const topbar = document.getElementById("topbar");
+    const statCards = document.querySelectorAll(".gsap-card");
+    const charts = document.querySelectorAll(".gsap-chart");
 
+    // Timeline dimulai sedikit lebih cepat (delay dikurangi jadi 0.1)
+    // Agar user tidak bengong nunggu animasi mulai
+    const tl = gsap.timeline({ delay: 0.1 });
 
-    // Kita set posisi awal (from) dan biarkan GSAP menganimasikan ke posisi asli
-    gsap.fromTo(sidebarlogin,
-        { x: '-100%', opacity: 0 },
-        { x: '0%', opacity: 1, duration: 1.2, ease: "power4.out", delay: 0.2 }
-    );
+    // --- PHASE 1: STRUKTUR UTAMA (Sidebar & Topbar) ---
+    // Durasi 1s, tapi terasa smooth karena expo.out
+    tl.to(sidebar, {
+        x: "0%",
+        opacity: 1,
+        duration: 1.0,
+        ease: "expo.out", // Deselerasi (Cepat di awal, ngerem di akhir)
+        onComplete: () => {
+            sidebar.classList.remove("opacity-0", "-translate-x-full");
+            gsap.set(sidebar, { clearProps: "all" });
+        },
+    })
+        .to(
+            topbar,
+            {
+                y: "0%",
+                opacity: 1,
+                duration: 1.0,
+                ease: "expo.out",
+                onComplete: () => {
+                    topbar.classList.remove("opacity-0", "-translate-y-full");
+                    gsap.set(topbar, { clearProps: "all" });
+                },
+            },
+            "<",
+        ) // Sidebar & Topbar masuk barengan
+
+        // --- PHASE 2: WATERFALL KONTEN (Kartu Statistik) ---
+        // Start di "-=0.7" artinya: Mulai saat Sidebar & Topbar BARU JALAN 0.3 detik.
+        // Ini rahasia agar terlihat "Fluid/Menyatu"
+        .to(
+            statCards,
+            {
+                y: 0,
+                opacity: 1,
+                duration: 0.8,
+                ease: "power3.out", // Easing sedikit lebih lembut dari sidebar
+                stagger: 0.08, // Jeda antar kartu dipercepat (biar ga lambat nungguin satu2)
+                onComplete: () => {
+                    statCards.forEach((el) => {
+                        el.classList.remove("opacity-0", "translate-y-10");
+                        gsap.set(el, { clearProps: "all" });
+                    });
+                },
+            },
+            "-=0.7",
+        )
+
+        // --- PHASE 3: GRAFIK (Penutup) ---
+        // Masuk berurutan setelah kartu mulai muncul
+        .to(
+            charts,
+            {
+                y: 0,
+                opacity: 1,
+                duration: 0.8,
+                ease: "power3.out",
+                stagger: 0.15,
+                onComplete: () => {
+                    charts.forEach((el) => {
+                        el.classList.remove("opacity-0", "translate-y-10");
+                        gsap.set(el, { clearProps: "all" });
+                    });
+                },
+            },
+            "-=0.6",
+        );
 });

@@ -16,7 +16,7 @@
 
     <div class="flex h-screen overflow-hidden">
 
-        <aside id="sidebar" class="hidden md:flex md:flex-col md:w-64 bg-[#37517e] text-white transition-all duration-300">
+        <aside id="sidebar" class="hidden md:flex md:flex-col md:w-64 bg-[#37517e] text-white opacity-0 -translate-x-full">
 
             <div class="flex items-center justify-center h-18 py-5 border-b border-white/10 bg-[#2a3f63] shrink-0">
                 <i data-lucide="book-open-text"></i><span class="ml-3 text-lg font-bold tracking-wide">BUKUSISWA</span>
@@ -71,7 +71,7 @@
 
         <div class="flex-1 flex flex-col overflow-hidden relative">
 
-            <header class="flex items-center justify-between px-6 py-4 bg-white border-b border-gray-200 shrink-0">
+            <header id="topbar" class="flex items-center justify-between px-6 py-4 bg-white border-b border-gray-200 shrink-0 opacity-0 -translate-y-full">
                 <div class="flex items-center">
                     <h2 class="text-xl font-bold text-[#37517e]">
                         {{ $header ?? 'Dashboard' }}

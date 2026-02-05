@@ -193,11 +193,12 @@ function renderCharts() {
     }
 }
 
+// Animasi Masuk (Initial Load)
 document.addEventListener("DOMContentLoaded", function () {
     const kiri = document.getElementById('leftPanel');
     const kanan = document.getElementById('rightPanel');
 
-    // 1. Animasi Masuk (Initial Load)
+
     // Kita set posisi awal (from) dan biarkan GSAP menganimasikan ke posisi asli
     gsap.fromTo(kiri,
         { x: '-100%', opacity: 0 },
@@ -210,7 +211,7 @@ document.addEventListener("DOMContentLoaded", function () {
     );
 });
 
-// 2. Animasi Berhasil Login (Exit Animation)
+// Animasi Berhasil Login (Exit Animation)
 document.addEventListener("livewire:init", () => {
 
     Livewire.on('loginSuccess', () => {
@@ -234,7 +235,7 @@ document.addEventListener("livewire:init", () => {
         tl.to(kiri, {
             xPercent: -100, // Menggunakan xPercent lebih stabil untuk layout responsif
             opacity: 0,
-            duration: 0.8,
+            duration: 0.5,
             ease: "expo.in"
         })
             .to(kanan, {
@@ -248,4 +249,16 @@ document.addEventListener("livewire:init", () => {
                 duration: 0.4
             }, "-=0.4");
     });
+});
+
+// Animasi sidebar login
+document.addEventListener("DOMContentLoaded", function () {
+    const sidebarlogin = document.getElementById('sidebar');
+
+
+    // Kita set posisi awal (from) dan biarkan GSAP menganimasikan ke posisi asli
+    gsap.fromTo(sidebarlogin,
+        { x: '-100%', opacity: 0 },
+        { x: '0%', opacity: 1, duration: 1.2, ease: "power4.out", delay: 0.2 }
+    );
 });

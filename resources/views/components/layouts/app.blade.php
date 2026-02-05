@@ -17,34 +17,50 @@
 
     <div class="flex h-screen overflow-hidden">
 
-        <aside class="absolute inset-y-0 left-0 z-50 w-64 bg-[#37517e] text-white transition-transform duration-300 transform md:relative md:translate-x-0"
-            :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'">
-
-            <div class="flex items-center justify-center h-18 border-b border-white/10 bg-[#2a3f63]">
-                <i data-lucide = "book-open-text"></i><span class="ml-3 text-lg font-bold tracking-wide">BUKUSISWA</span>
-            </div>
+<aside id="sidebar" class="hidden md:flex md:flex-col md:w-64 bg-[#37517e] text-white">
+    <div class="flex items-center justify-center h-18 border-b border-white/10 bg-[#2a3f63]">
+        <i data-lucide="book-open-text"></i><span class="ml-3 text-lg font-bold tracking-wide">BUKUSISWA</span>
+    </div>
 
             <nav class="mt-5 px-4 space-y-2">
-                <a href="/dashboard" class="flex items-center px-4 py-3 bg-white/10 rounded-lg text-white group transition-colors">
-                    <i data-lucide="house" class="w-5 h-5 mr-3"></i>
-                    <span class="font-medium">Dashboard</span>
+                <a href="/dashboard"
+                    class="flex items-center px-4 py-3 rounded-lg transition-colors
+                    {{ Route::is('dashboard') 
+                    ? 'bg-white/90 text-[#37517e]' 
+                    : 'text-gray-300 hover:bg-white/10 hover:text-white' }}">
+                    <i data-lucide="house" class="w-5 h-5 mr-3"
+                        @if(Route::is('dashboard')) stroke-width="3" @endif>
+                    </i>
+                    <span class="{{ Route::is('dashboard') ? 'font-bold' : 'font-medium'}}">Dashboard</span>
                 </a>
 
-                <a href="#" class="flex items-center px-4 py-3 text-gray-300 hover:bg-white/10 hover:text-white rounded-lg transition-colors">
-                    <i data-lucide="users" class="w-5 h-5 mr-3"></i>
-                    <span class="font-medium">Data Siswa</span>
+                <a href="/siswa"
+                    class="flex items-center px-4 py-3 rounded-lg transition-colors
+                    {{ Route::is('siswa') 
+                    ? 'bg-white/90 text-[#37517e]' 
+                    : 'text-gray-300 hover:bg-white/10 hover:text-white' }}">
+                    <i data-lucide="users" class="w-5 h-5 mr-3"
+                        @if(Route::is('siswa')) stroke-width="3" @endif>
+                    </i>
+                    <span class="{{ Route::is('siswa') ? 'font-bold' : 'font-medium'}}">Data Siswa</span>
                 </a>
 
-                <a href="#" class="flex items-center px-4 py-3 text-gray-300 hover:bg-white/10 hover:text-white rounded-lg transition-colors">
-                    <i data-lucide="clipboard-check" class="w-5 h-5 mr-3"></i>
-                    <span class="font-medium">Pelanggaran</span>
+                <a href="/pelanggaran"
+                    class="flex items-center px-4 py-3 rounded-lg transition-colors
+                    {{ Route::is('pelanggaran') 
+                    ? 'bg-white/90 text-[#37517e]' 
+                    : 'text-gray-300 hover:bg-white/10 hover:text-white' }}">
+                    <i data-lucide="shield-off" class="w-5 h-5 mr-3"
+                        @if(Route::is('pelanggaran')) stroke-width="3" @endif>
+                    </i>
+                    <span class="{{ Route::is('pelanggaran') ? 'font-bold' : 'font-medium'}}">Pelanggaran</span>
                 </a>
 
                 <div class="pt-4 mt-4 border-t border-white/10">
                     <p class="px-4 text-xs font-semibold text-gray-400 uppercase mb-2">Akun</p>
 
                     <button wire:click="logout" onclick="event.preventDefault(); document.getElementById('logout-form').submit();"
-                        class="flex w-full items-center px-4 py-3 text-red-300 hover:bg-red-500/10 hover:text-red-200 rounded-lg transition-colors">
+                        class="flex w-full items-center px-4 py-3 text-red-300 hover:bg-red-500/25 hover:text-red-200 rounded-lg transition-colors">
                         <i data-lucide="log-out" class="w-5 h-5 mr-3"></i>
                         <span class="font-medium">Logout</span>
                     </button>
@@ -59,9 +75,6 @@
 
             <header class="flex items-center justify-between px-6 py-4 bg-white border-b border-gray-200">
                 <div class="flex items-center">
-                    <button @click="sidebarOpen = !sidebarOpen" class="text-gray-500 focus:outline-none md:hidden">
-                        <i data-lucide="menu" class="w-6 h-6"></i>
-                    </button>
                     <h2 class="text-xl font-bold text-[#37517e] ml-4 md:ml-0">
                         {{ $header ?? 'Dashboard' }}
                     </h2>
@@ -87,6 +100,50 @@
 
         <div x-show="sidebarOpen" @click="sidebarOpen = false"
             class="fixed inset-0 z-40 bg-black opacity-50 md:hidden"></div>
+    </div>
+    <!-- Footer Bar Mobile -->
+    <div class="fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 shadow-md md:hidden">
+        <div class="flex justify-around py-2">
+            <!-- Dashboard -->
+            <a href="/dashboard" class="flex flex-col items-center w-16">
+                <div
+                    class="w-12 h-12 flex items-center justify-center bg-[#37517e] text-white rounded-md mb-1
+                {{ Request::is('dashboard') ? 'bg-[#2a3f63]' : '' }}">
+                    <i data-lucide="home" class="w-6 h-6"></i>
+                </div>
+                <span class="text-xs text-gray-700">Dashboard</span>
+            </a>
+
+            <!-- Siswa -->
+            <a href="/siswa" class="flex flex-col items-center w-16">
+                <div
+                    class="w-12 h-12 flex items-center justify-center bg-[#37517e] text-white rounded-md mb-1
+                {{ Request::is('siswa') ? 'bg-[#2a3f63]' : '' }}">
+                    <i data-lucide="users" class="w-6 h-6"></i>
+                </div>
+                <span class="text-xs text-gray-700">Siswa</span>
+            </a>
+
+            <!-- Pelanggaran -->
+            <a href="/pelanggaran" class="flex flex-col items-center w-16">
+                <div
+                    class="w-12 h-12 flex items-center justify-center bg-[#37517e] text-white rounded-md mb-1
+                {{ Request::is('pelanggaran') ? 'bg-[#2a3f63]' : '' }}">
+                    <i data-lucide="shield-off" class="w-6 h-6"></i>
+                </div>
+                <span class="text-xs text-gray-700">Pelanggaran</span>
+            </a>
+
+            <!-- Akun / Profil -->
+            <a href="/profil" class="flex flex-col items-center w-16">
+                <div
+                    class="w-12 h-12 flex items-center justify-center bg-[#37517e] text-white rounded-md mb-1
+                {{ Request::is('profil') ? 'bg-[#2a3f63]' : '' }}">
+                    <i data-lucide="user" class="w-6 h-6"></i>
+                </div>
+                <span class="text-xs text-gray-700">Profil</span>
+            </a>
+        </div>
     </div>
 
     <script src="https://unpkg.com/lucide@latest"></script>

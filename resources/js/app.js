@@ -40,87 +40,48 @@ document.addEventListener("livewire:initialized", () => {
 var chartInstance1 = null;
 var chartInstance2 = null;
 
-document.addEventListener("livewire:navigated", () => {
-    renderCharts();
-});
-
-// Initial load
-renderCharts();
-
+// Fungsi render chart
 function renderCharts() {
-    // PENTING: Hapus chart lama sebelum render baru (Mencegah Duplikasi)
+    // Hapus chart lama sebelum render baru (Mencegah Duplikasi)
     if (chartInstance1) chartInstance1.destroy();
     if (chartInstance2) chartInstance2.destroy();
 
     // --- CHART 1: AREA (Kehadiran) ---
     var optionsArea = {
         series: [
-            {
-                name: "Hadir",
-                data: [1150, 1180, 1190, 1160, 1180, 1200],
-            },
-            {
-                name: "Tidak Hadir",
-                data: [90, 60, 50, 80, 60, 40],
-            },
+            { name: "Hadir", data: [1150, 1180, 1190, 1160, 1180, 1200] },
+            { name: "Tidak Hadir", data: [90, 60, 50, 80, 60, 40] },
         ],
         chart: {
-            height: 320, // Samakan tinggi visual
+            height: 320,
             type: "area",
-            toolbar: {
-                show: false,
-            }, // Hilangkan menu zoom biar clean
+            toolbar: { show: false },
             fontFamily: "Plus Jakarta Sans, sans-serif",
-            zoom: {
-                enabled: false,
+            zoom: { enabled: false },
+            animations: {
+                enabled: true,
+                easing: "easeinout",
+                speed: 800, // kecepatan animasi
+                animateGradually: { enabled: true, delay: 200 }, // delay antar point
+                dynamicAnimation: { enabled: true, speed: 350 },
             },
         },
         colors: ["#37517e", "#ef4444"],
-        dataLabels: {
-            enabled: false,
-        },
-        stroke: {
-            curve: "smooth",
-            width: 3,
-        },
+        dataLabels: { enabled: false },
+        stroke: { curve: "smooth", width: 3 },
         xaxis: {
             categories: ["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"],
-            axisBorder: {
-                show: false,
-            },
-            axisTicks: {
-                show: false,
-            },
-            labels: {
-                style: {
-                    colors: "#94a3b8",
-                },
-            },
+            axisBorder: { show: false },
+            axisTicks: { show: false },
+            labels: { style: { colors: "#94a3b8" } },
         },
-        yaxis: {
-            labels: {
-                style: {
-                    colors: "#94a3b8",
-                },
-            },
-        },
-        grid: {
-            borderColor: "#f1f5f9",
-            strokeDashArray: 4, // Garis putus-putus biar modern
-        },
+        yaxis: { labels: { style: { colors: "#94a3b8" } } },
+        grid: { borderColor: "#f1f5f9", strokeDashArray: 4 },
         fill: {
             type: "gradient",
-            gradient: {
-                shadeIntensity: 1,
-                opacityFrom: 0.6,
-                opacityTo: 0.05,
-                stops: [0, 90, 100],
-            },
+            gradient: { shadeIntensity: 1, opacityFrom: 0.6, opacityTo: 0.05, stops: [0, 90, 100] },
         },
-        legend: {
-            position: "top",
-            horizontalAlign: "right",
-        },
+        legend: { position: "top", horizontalAlign: "right" },
     };
 
     var elArea = document.querySelector("#chart-attendance");
@@ -135,53 +96,41 @@ function renderCharts() {
         labels: ["Hadir", "Izin/Sakit", "Alfa"],
         chart: {
             type: "donut",
-            height: 320, // Samakan tinggi dengan sebelahnya
+            height: 320,
             fontFamily: "Plus Jakarta Sans, sans-serif",
+            animations: {
+                enabled: true,
+                easing: "easeinout",
+                speed: 800,
+            },
         },
         colors: ["#37517e", "#fb923c", "#ef4444"],
         plotOptions: {
             pie: {
                 donut: {
-                    size: "75%", // Lebih tipis biar modern
+                    size: "75%",
                     labels: {
                         show: true,
-                        name: {
-                            fontSize: "14px",
-                            color: "#64748b",
-                        },
-                        value: {
-                            fontSize: "24px",
-                            fontWeight: 700,
-                            color: "#1e293b",
-                        },
+                        name: { fontSize: "14px", color: "#64748b" },
+                        value: { fontSize: "24px", fontWeight: 700, color: "#1e293b" },
                         total: {
                             show: true,
                             label: "Total Siswa",
                             color: "#64748b",
                             formatter: function (w) {
-                                return w.globals.seriesTotals.reduce(
-                                    (a, b) => a + b,
-                                    0,
-                                );
+                                return w.globals.seriesTotals.reduce((a, b) => a + b, 0);
                             },
                         },
                     },
                 },
             },
         },
-        stroke: {
-            show: false,
-        }, // Hilangkan garis putih di antar slice
-        dataLabels: {
-            enabled: false,
-        }, // Hilangkan angka di dalam donut biar clean
+        stroke: { show: false },
+        dataLabels: { enabled: false },
         legend: {
-            position: "bottom", // Pindahkan ke bawah agar grafik tidak kegencet
+            position: "bottom",
             offsetY: 0,
-            itemMargin: {
-                horizontal: 10,
-                vertical: 5,
-            },
+            itemMargin: { horizontal: 10, vertical: 5 },
         },
     };
 
@@ -191,6 +140,21 @@ function renderCharts() {
         chartInstance2.render();
     }
 }
+
+// --- Delay 2 detik setelah halaman load ---
+document.addEventListener("DOMContentLoaded", () => {
+    setTimeout(() => {
+        renderCharts();
+    }, 500); // 2000ms = 2 detik
+});
+
+// Jika menggunakan Livewire navigation, tetap panggil saat navigasi
+document.addEventListener("livewire:navigated", () => {
+    setTimeout(() => {
+        renderCharts();
+    }, 500);
+});
+
 
 // Animasi Masuk (Initial Load)
 document.addEventListener("DOMContentLoaded", function () {
@@ -339,4 +303,97 @@ document.addEventListener("DOMContentLoaded", function () {
             },
             "-=0.6",
         );
+});
+
+// Animasi in Footbar (Mobile) 
+document.addEventListener("DOMContentLoaded", () => {
+    const footbar = document.querySelector("#footbar");
+
+    gsap.to(footbar, {
+        y: 0,
+        opacity: 1,
+        duration: 0.8, 
+        ease: "expo.out",
+        delay: 1,
+    });
+});
+
+
+// Animasi Logout
+document.addEventListener("DOMContentLoaded", () => {
+    const logoutButton = document.getElementById("logoutButton");
+    const sidebar = document.getElementById("sidebar");
+    const topbar = document.getElementById("topbar");
+    const statCards = document.querySelectorAll(".gsap-card");
+    const charts = document.querySelectorAll(".gsap-chart");
+    const footbar = document.querySelector("#footbar");
+
+    logoutButton.addEventListener("click", (e) => {
+        e.preventDefault(); // mencegah aksi default
+
+        const tlLogout = gsap.timeline({
+            onComplete: () => {
+                // Submit form sekali setelah animasi selesai
+                document.getElementById("logout-form").submit();
+            }
+        });
+
+        // Sidebar keluar ke kiri
+        tlLogout.to(sidebar, {
+            x: "-100%",
+            opacity: 0,
+            duration: 0.8,
+            ease: "expo.in",
+        });
+
+        // Topbar keluar ke atas, bersamaan dengan sidebar
+        tlLogout.to(
+            topbar,
+            {
+                y: "-100%",
+                opacity: 0,
+                duration: 0.8,
+                ease: "expo.in",
+            },
+            "<"
+        );
+
+        // Stat cards keluar ke bawah
+        tlLogout.to(
+            statCards,
+            {
+                y: 20,
+                opacity: 0,
+                duration: 0.5,
+                stagger: 0.05,
+                ease: "power2.in",
+            },
+            "-=0.6"
+        );
+
+        // Charts keluar ke bawah
+        tlLogout.to(
+            charts,
+            {
+                y: 20,
+                opacity: 0,
+                duration: 0.5,
+                stagger: 0.1,
+                ease: "power2.in",
+            },
+            "-=0.45"
+        );
+
+        // Footbar turun/fade out di HP
+        tlLogout.to(
+            footbar,
+            {
+                y: 50,
+                opacity: 0,
+                duration: 0.6,
+                ease: "expo.in",
+            },
+            "-=0.5"
+        );
+    });
 });

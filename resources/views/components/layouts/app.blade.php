@@ -60,11 +60,12 @@
                 </nav>
 
                 <div class="p-4 border-t border-white/10 mb-2">
-                    <button onclick="event.preventDefault(); document.getElementById('logout-form').submit();"
-                        class="flex w-full items-center px-4 py-3 text-red-300 hover:bg-red-500/25 hover:text-red-200 rounded-lg transition-colors">
-                        <i data-lucide="log-out" class="w-5 h-5 mr-3"></i>
-                        <span class="font-medium">Logout</span>
-                    </button>
+<button id="logoutButton"
+    class="flex w-full items-center px-4 py-3 text-red-300 hover:bg-red-500/25 hover:text-red-200 rounded-lg transition-colors">
+    <i data-lucide="log-out" class="w-5 h-5 mr-3"></i>
+    <span class="font-medium">Logout</span>
+</button>
+
                 </div>
             </div>
         </aside>
@@ -97,7 +98,7 @@
         </div>
     </div>
 
-    <nav class="md:hidden fixed bottom-6 left-4 right-4 z-50 bg-white/95 backdrop-blur-xl border border-white/20 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
+    <nav id="footbar" class="md:hidden fixed bottom-6 left-4 right-4 z-50 bg-white/95 backdrop-blur-xl border border-white/20 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
         <div class="flex justify-around items-center h-[70px] px-2">
 
             <a href="/dashboard" class="relative flex flex-col items-center justify-center w-full h-full group">

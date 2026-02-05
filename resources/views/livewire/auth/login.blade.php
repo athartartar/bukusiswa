@@ -43,7 +43,7 @@
 
                     <div class="relative">
                         <span class="absolute inset-y-0 left-3 flex items-center text-gray-400 pointer-events-none">
-                            <i data-lucide="at-sign" class="w-4 h-4"></i>
+                            <i data-lucide="at-sign" class="text-[#37517e] w-4 h-4"></i>
                         </span>
 
                         <input wire:model="username" type="number" placeholder="Masukkan username..." class="peer w-full text-sm
@@ -74,7 +74,7 @@
 
                     <div class="relative">
                         <span class="absolute inset-y-0 left-3 flex items-center text-gray-400 pointer-events-none">
-                            <i data-lucide="lock" class="w-4 h-4"></i>
+                            <i data-lucide="lock" class="text-[#37517e] w-4 h-4"></i>
                         </span>
 
                         <input wire:model="password" :type="show ? 'text' : 'password'"
@@ -99,8 +99,8 @@
                         <button type="button" @click="show = !show"
                             class="absolute inset-y-0 right-0 px-3 flex items-center text-gray-400 hover:text-[#37517e] focus:outline-none">
 
-                            <i x-show="!show" data-lucide="eye" class="w-5 h-5"></i>
-                            <i x-show="show" data-lucide="eye-closed" class="w-5 h-5" style="display: none;"></i>
+                            <i x-show="!show" data-lucide="eye" class="text-[#37517e] w-5 h-5"></i>
+                            <i x-show="show" data-lucide="eye-closed" class="text-[#37517e] w-5 h-5" style="display: none;"></i>
                         </button>
                     </div>
                     @error('password') <span class="text-xs text-red-600 mt-1 block">{{ $message }}</span> @enderror

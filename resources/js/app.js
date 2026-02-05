@@ -79,7 +79,12 @@ function renderCharts() {
         grid: { borderColor: "#f1f5f9", strokeDashArray: 4 },
         fill: {
             type: "gradient",
-            gradient: { shadeIntensity: 1, opacityFrom: 0.6, opacityTo: 0.05, stops: [0, 90, 100] },
+            gradient: {
+                shadeIntensity: 1,
+                opacityFrom: 0.6,
+                opacityTo: 0.05,
+                stops: [0, 90, 100],
+            },
         },
         legend: { position: "top", horizontalAlign: "right" },
     };
@@ -112,13 +117,20 @@ function renderCharts() {
                     labels: {
                         show: true,
                         name: { fontSize: "14px", color: "#64748b" },
-                        value: { fontSize: "24px", fontWeight: 700, color: "#1e293b" },
+                        value: {
+                            fontSize: "24px",
+                            fontWeight: 700,
+                            color: "#1e293b",
+                        },
                         total: {
                             show: true,
                             label: "Total Siswa",
                             color: "#64748b",
                             formatter: function (w) {
-                                return w.globals.seriesTotals.reduce((a, b) => a + b, 0);
+                                return w.globals.seriesTotals.reduce(
+                                    (a, b) => a + b,
+                                    0,
+                                );
                             },
                         },
                     },
@@ -154,7 +166,6 @@ document.addEventListener("livewire:navigated", () => {
         renderCharts();
     }, 500);
 });
-
 
 // Animasi Masuk (Initial Load)
 document.addEventListener("DOMContentLoaded", function () {
@@ -305,19 +316,18 @@ document.addEventListener("DOMContentLoaded", function () {
         );
 });
 
-// Animasi in Footbar (Mobile) 
+// Animasi in Footbar (Mobile)
 document.addEventListener("DOMContentLoaded", () => {
     const footbar = document.querySelector("#footbar");
 
     gsap.to(footbar, {
         y: 0,
         opacity: 1,
-        duration: 0.8, 
+        duration: 0.8,
         ease: "expo.out",
         delay: 1,
     });
 });
-
 
 // Animasi Logout
 document.addEventListener("DOMContentLoaded", () => {
@@ -335,7 +345,7 @@ document.addEventListener("DOMContentLoaded", () => {
             onComplete: () => {
                 // Submit form sekali setelah animasi selesai
                 document.getElementById("logout-form").submit();
-            }
+            },
         });
 
         // Sidebar keluar ke kiri
@@ -355,7 +365,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 duration: 0.8,
                 ease: "expo.in",
             },
-            "<"
+            "<",
         );
 
         // Stat cards keluar ke bawah
@@ -368,7 +378,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 stagger: 0.05,
                 ease: "power2.in",
             },
-            "-=0.6"
+            "-=0.6",
         );
 
         // Charts keluar ke bawah
@@ -381,7 +391,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 stagger: 0.1,
                 ease: "power2.in",
             },
-            "-=0.45"
+            "-=0.45",
         );
 
         // Footbar turun/fade out di HP
@@ -393,7 +403,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 duration: 0.6,
                 ease: "expo.in",
             },
-            "-=0.5"
+            "-=0.5",
         );
     });
 });

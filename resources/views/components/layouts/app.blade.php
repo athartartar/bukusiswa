@@ -80,15 +80,23 @@
 
                 <div class="flex items-center space-x-4">
                     <a href="/profile" class=" transition-opacity">
-                    <div class="flex items-center space-x-2">
-                        <div class="text-right hidden md:block">
-                            <p class="text-sm font-bold text-gray-700">{{ Auth::user()->namalengkap ?? 'User' }}</p>
-                            <p class="text-xs text-gray-500 capitalize">{{ Auth::user()->usertype ?? 'Guest' }}</p>
+                        <div class="flex items-center space-x-2">
+                            <div class="text-right hidden md:block">
+                                <p class="text-sm font-bold text-gray-700">{{ Auth::user()->namalengkap ?? 'User' }}</p>
+                                <p class="text-xs text-gray-500 capitalize">{{ Auth::user()->usertype ?? 'Guest' }}</p>
+                            </div>
+                            <div class="relative">
+                                @if(Auth::user()->foto)
+                                <img src="{{ asset('storage/' . Auth::user()->foto) }}"
+                                    alt="Avatar"
+                                    class="w-10 h-10 rounded-full object-cover border-2 border-[#37517e] shadow-sm">
+                                @else
+                                <div class="w-10 h-10 rounded-full bg-[#37517e] flex items-center justify-center text-white font-bold shadow-sm">
+                                    {{ substr(Auth::user()->namalengkap ?? 'U', 0, 1) }}
+                                </div>
+                                @endif
+                            </div>
                         </div>
-                        <div class="w-10 h-10 rounded-full bg-[#37517e] flex items-center justify-center text-white font-bold">
-                            {{ substr(Auth::user()->namalengkap ?? 'U', 0, 1) }}
-                        </div>
-                    </div>
                     </a>
                 </div>
             </header>
@@ -170,7 +178,7 @@
 
                 <span class="absolute bottom-2 text-[10px] font-bold text-[#37517e] transition-all duration-300 
                       {{ Request::routeIs('profile') ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none' }}">
-                    Profile
+                    Profil
                 </span>
             </a>
 

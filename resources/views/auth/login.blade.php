@@ -134,8 +134,8 @@
                             type="button"
                             onclick="togglePassword()"
                             class="absolute inset-y-0 right-0 px-3
-                   flex items-center text-gray-400
-                   hover:text-[#37517e]">
+                            flex items-center text-gray-400
+                        hover:text-[#37517e]">
 
                             <!-- eye -->
                             <i id="eye" data-lucide="eye" class="w-5 h-5"></i>
@@ -149,11 +149,11 @@
                 <!-- Button -->
                 <button type="button"
                     class="w-full mt-2
-                   bg-[#37517e] text-white
-                   py-2.5 rounded-lg
-                   font-semibold text-sm
-                   hover:bg-[#2c4064]
-                   transition duration-200">
+                    bg-[#37517e] text-white
+                    py-2.5 rounded-lg
+                    font-semibold text-sm
+                    hover:bg-[#2c4064]
+                    transition duration-200">
                     Login
                 </button>
 

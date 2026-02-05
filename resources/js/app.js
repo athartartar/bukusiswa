@@ -1,5 +1,8 @@
 import "./bootstrap";
 
+import gsap from "gsap";
+
+
 document.addEventListener("DOMContentLoaded", () => {
     if (window.lucide) {
         lucide.createIcons();
@@ -190,38 +193,59 @@ function renderCharts() {
     }
 }
 
-// Animasi laod Login
 document.addEventListener("DOMContentLoaded", function () {
-
     const kiri = document.getElementById('leftPanel');
     const kanan = document.getElementById('rightPanel');
 
-    setTimeout(() => {
-        kiri.classList.remove('-translate-x-full', 'opacity-0');
-        kanan.classList.remove('translate-x-full', 'opacity-0');
+    // 1. Animasi Masuk (Initial Load)
+    // Kita set posisi awal (from) dan biarkan GSAP menganimasikan ke posisi asli
+    gsap.fromTo(kiri,
+        { x: '-100%', opacity: 0 },
+        { x: '0%', opacity: 1, duration: 1.2, ease: "power4.out", delay: 0.2 }
+    );
 
-        kiri.classList.add('enter-left');
-        kanan.classList.add('enter-right');
-    }, 150);
-
+    gsap.fromTo(kanan,
+        { x: '100%', opacity: 0 },
+        { x: '0%', opacity: 1, duration: 1.2, ease: "power4.out", delay: 0.2 }
+    );
 });
 
-// Animasi berhasil login
+// 2. Animasi Berhasil Login (Exit Animation)
 document.addEventListener("livewire:init", () => {
 
     Livewire.on('loginSuccess', () => {
-
+        // Ambil elemen di dalam scope event ini
         const kiri = document.getElementById('leftPanel');
         const kanan = document.getElementById('rightPanel');
         const wrap = document.getElementById('loginWrapper');
 
-        kiri.classList.add('swipe-left');
-        kanan.classList.add('swipe-right');
-        wrap.classList.add('fade-white');
+        // Penting: Hapus class transisi Tailwind bawaan jika masih tersisa
+        // Agar tidak terjadi konflik durasi
+        [kiri, kanan].forEach(el => {
+            if (el) el.style.transition = 'none';
+        });
 
-        setTimeout(() => {
-            window.location.href = "/dashboard";
-        }, 700);
+        const tl = gsap.timeline({
+            onComplete: () => {
+                window.location.href = "/dashboard";
+            }
+        });
+
+        tl.to(kiri, {
+            xPercent: -100, // Menggunakan xPercent lebih stabil untuk layout responsif
+            opacity: 0,
+            duration: 0.8,
+            ease: "expo.in"
+        })
+            .to(kanan, {
+                xPercent: 100,
+                opacity: 0,
+                duration: 0.8,
+                ease: "expo.in"
+            }, "<") // Mulai bersamaan dengan panel kiri
+            .to(wrap, {
+                backgroundColor: "#ffffff",
+                duration: 0.4
+            }, "-=0.4");
     });
-
 });

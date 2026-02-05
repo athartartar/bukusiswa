@@ -1,7 +1,6 @@
 <div id="loginWrapper" class="min-h-screen flex bg-white overflow-hidden">
 
-    <div id="leftPanel" class="hidden md:flex w-1/2 relative bg-[#37517e] items-center justify-center p-10 overflow-hidden
-transition-all duration-700 -translate-x-full opacity-0">
+    <div id="leftPanel" wire:ignore class="hidden md:flex w-1/2 relative bg-[#37517e] items-center justify-center p-10 overflow-hidden opacity-0">
         <div class="absolute inset-0 bg-center bg-cover opacity-10" style="background-image: url('/images/upnvj.jpg');">
         </div>
 
@@ -12,7 +11,7 @@ transition-all duration-700 -translate-x-full opacity-0">
         </div>
     </div>
 
-    <div id="rightPanel" class="w-full md:w-1/2 flex items-center justify-center p-6 transition-all duration-700 translate-x-full opacity-0">
+    <div id="rightPanel" wire:ignore class="w-full md:w-1/2 flex items-center justify-center p-6 opacity-0">
         <div class="md:hidden absolute top-40 left-1/2 -translate-x-1/2 text-center">
             <img src="/images/logosmk.png" alt="Logo" class="mx-auto mb-3 w-20 h-auto">
             <h1 class="text-xl font-bold text-[#37517e]">Selamat Datang</h1>

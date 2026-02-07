@@ -17,15 +17,54 @@
         </div>
 
         <div class="grid grid-cols-2 md:flex md:items-center gap-3 w-full md:w-auto">
-            <div class="gsap-card opacity-0 translate-y-10 relative w-full md:w-auto">
-                <select x-model.number="rowsPerPage" @change="updateRows()"
-                    class="w-full appearance-none py-2.5 pl-4 pr-10 border border-gray-200 bg-white rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#37517e]/20 focus:border-[#37517e] shadow-sm cursor-pointer hover:bg-gray-50 font-medium text-gray-700 truncate">
-                    <option value="5">5 Baris</option>
-                    <option value="10">10 Baris</option>
-                    <option value="25">25 Baris</option>
-                </select>
-                <div class="absolute inset-y-0 right-3 flex items-center pointer-events-none text-gray-500">
-                    <i data-lucide="chevron-down" class="w-4 h-4"></i>
+            <div x-data="{
+                open: false,
+                options: [5, 10, 25, 50]
+            }" class="gsap-card opacity-0 translate-y-10 relative group w-full md:w-auto"
+                @click.outside="open = false">
+
+                <button type="button" @click="open = !open"
+                    class="w-full md:w-36 pl-4 pr-10 py-2.5 text-left border bg-white focus:outline-none transition-all flex items-center justify-between relative z-10"
+                    :class="open ? 'rounded-t-xl border-[#37517e] ring-2 ring-[#37517e]/20 border-b-transparent' :
+                        'rounded-xl border-gray-200 group-hover:border-[#37517e]/50'">
+                    <span x-text="rowsPerPage + ' Baris'" class="block truncate font-medium text-gray-700">
+                    </span>
+
+                    <span
+                        class="absolute inset-y-0 right-0 flex flex-col justify-center pr-3 pointer-events-none text-gray-500">
+                        <i data-lucide="chevron-down" class="w-4 h-4 transition-transform duration-300 ease-in-out"
+                            :class="open ? 'rotate-180' : ''"></i>
+                    </span>
+                </button>
+
+                <div x-show="open" x-transition:enter="transition ease-out duration-200"
+                    x-transition:enter-start="transform opacity-0 -translate-y-2"
+                    x-transition:enter-end="transform opacity-100 translate-y-0"
+                    x-transition:leave="transition ease-in duration-150"
+                    x-transition:leave-start="transform opacity-100 translate-y-0"
+                    x-transition:leave-end="transform opacity-0 -translate-y-2"
+                    class="absolute z-20 -mt-[2px] w-full bg-white shadow-[0_10px_20px_-5px_rgba(0,0,0,0.1)] rounded-b-xl border border-t-0 border-[#37517e] overflow-hidden"
+                    style="display: none;">
+
+                    <ul class="py-1">
+                        <template x-for="option in options" :key="option">
+                            <li @click="rowsPerPage = option; updateRows(); open = false"
+                                class="cursor-pointer select-none relative py-2.5 pl-4 pr-9 text-sm hover:bg-indigo-50/80 transition-colors duration-150"
+                                :class="rowsPerPage === option ? 'bg-indigo-50 text-[#37517e] font-semibold' : 'text-gray-700'">
+
+                                <span x-text="option + ' Baris'" class="block truncate"></span>
+
+                                <span x-show="rowsPerPage === option"
+                                    class="absolute inset-y-0 right-0 flex items-center pr-3 text-[#37517e]">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                                        stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="20 6 9 17 4 12"></polyline>
+                                    </svg>
+                                </span>
+                            </li>
+                        </template>
+                    </ul>
                 </div>
             </div>
 
@@ -116,7 +155,8 @@
                                         <i data-lucide="search-x" class="w-8 h-8 text-gray-400"></i>
                                     </div>
                                     <h3 class="text-gray-900 font-medium">Data tidak ditemukan</h3>
-                                    <p class="text-gray-500 text-sm mt-1">Coba kata kunci lain atau tambahkan data baru.
+                                    <p class="text-gray-500 text-sm mt-1">Coba kata kunci lain atau tambahkan data
+                                        baru.
                                     </p>
                                 </div>
                             </td>
@@ -222,50 +262,161 @@
                         </div>
                     </div>
                     <div class="grid grid-cols-2 gap-4">
-                        <div>
+                        <div x-data="{
+                            open: false,
+                            search: '',
+                            options: ['X RPL 1', 'X TSM 1', 'X AKL 2', 'XI DKV 1', 'XI RPL 2', 'XI TKJ 1', 'XII RPL 1', 'XII TKJ 2', 'XII DKV 2', 'XII MM 1'],
+                            get filteredOptions() {
+                                if (this.search === '') return this.options;
+                                return this.options.filter(item => item.toLowerCase().includes(this.search.toLowerCase()));
+                            }
+                        }" class="relative group" @click.outside="open = false">
+
                             <label class="block text-sm font-medium text-gray-700 mb-1.5">Kelas</label>
-                            <div class="relative">
-                                <select x-model="formData.class"
-                                    class="w-full pl-10 pr-8 py-2.5 rounded-xl border border-gray-200 bg-white outline-none focus:ring-2 focus:ring-[#37517e]/20 appearance-none">
-                                    <option value="">Pilih Kelas...</option>
-                                    <option>X RPL 1</option>
-                                    <option>X TSM 1</option>
-                                    <option>X AKL 2</option>
-                                    <option>XI DKV 1</option>
-                                    <option>XI RPL 2</option>
-                                    <option>XI TKJ 1</option>
-                                    <option>XII RPL 1</option>
-                                    <option>XII TKJ 2</option>
-                                    <option>XII DKV 2</option>
-                                    <option>XII MM 1</option>
-                                </select>
-                                <div
-                                    class="absolute inset-y-0 left-3 flex items-center pointer-events-none text-gray-400">
-                                    <i data-lucide="graduation-cap" class="w-4 h-4"></i>
+
+                            <button type="button"
+                                @click="open = !open; if(open) $nextTick(() => $refs.searchInput.focus())"
+                                class="w-full pl-10 pr-10 py-2.5 text-left border bg-white focus:outline-none transition-all flex items-center justify-between relative z-10"
+                                :class="open ? 'rounded-t-xl border-[#37517e] ring-2 ring-[#37517e]/20 border-b-transparent' :
+                                    'rounded-xl border-gray-200 group-hover:border-[#37517e]/50'">
+                                <span x-text="formData.class ? formData.class : 'Pilih Kelas...'"
+                                    class="block truncate"
+                                    :class="formData.class ? 'text-gray-900' : 'text-gray-500'">
+                                </span>
+
+                                <span
+                                    class="absolute inset-y-0 right-0 flex flex-col justify-center pr-3 pointer-events-none text-gray-400">
+                                    <i data-lucide="chevron-down"
+                                        class="w-4 h-4 transition-transform duration-300 ease-in-out"
+                                        :class="open ? 'rotate-180' : ''"></i>
+                                </span>
+                            </button>
+
+                            <div
+                                class="absolute top-[38px] left-3 flex items-center pointer-events-none text-gray-400 z-20">
+                                <i data-lucide="graduation-cap" class="w-4 h-4"></i>
+                            </div>
+
+                            <div x-show="open" x-transition:enter="transition ease-out duration-200"
+                                x-transition:enter-start="transform opacity-0 -translate-y-2"
+                                x-transition:enter-end="transform opacity-100 translate-y-0"
+                                x-transition:leave="transition ease-in duration-150"
+                                x-transition:leave-start="transform opacity-100 translate-y-0"
+                                x-transition:leave-end="transform opacity-0 -translate-y-2"
+                                class="absolute z-20 -mt-[2px] w-full bg-white shadow-[0_10px_20px_-5px_rgba(0,0,0,0.1)] rounded-b-xl border border-t-0 border-[#37517e] overflow-hidden"
+                                style="display: none;">
+
+                                <div class="sticky top-0 z-30 bg-white p-2 border-b border-gray-100">
+                                    <div class="relative">
+                                        <input x-ref="searchInput" x-model="search" type="text"
+                                            class="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[#37517e] focus:ring-1 focus:ring-[#37517e] placeholder-gray-400 bg-gray-50/50"
+                                            placeholder="Cari kelas...">
+                                        <div
+                                            class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                            <i data-lucide="search" class="w-4 h-4 text-gray-400"></i>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div
-                                    class="absolute inset-y-0 right-3 flex items-center pointer-events-none text-gray-400">
-                                    <i data-lucide="chevron-down" class="w-4 h-4"></i>
-                                </div>
+
+                                <ul class="py-1 max-h-56 overflow-auto"
+                                    style="scrollbar-width: none; -ms-overflow-style: none;">
+                                    <style>
+                                        ul::-webkit-scrollbar {
+                                            display: none;
+                                        }
+                                    </style> <template x-for="option in filteredOptions" :key="option">
+                                        <li @click="formData.class = option; open = false; search = ''"
+                                            class="cursor-pointer select-none relative py-2.5 pl-4 pr-9 text-sm hover:bg-indigo-50/80 transition-colors duration-150"
+                                            :class="formData.class === option ? 'bg-indigo-50 text-[#37517e] font-semibold' :
+                                                'text-gray-700'">
+
+                                            <span x-text="option" class="block truncate"></span>
+
+                                            <span x-show="formData.class === option"
+                                                class="absolute inset-y-0 right-0 flex items-center pr-3 text-[#37517e]">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                                                    viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                    stroke-width="2.5" stroke-linecap="round"
+                                                    stroke-linejoin="round">
+                                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                                </svg>
+                                            </span>
+                                        </li>
+                                    </template>
+
+                                    <div x-show="filteredOptions.length === 0"
+                                        class="px-4 py-6 text-sm text-gray-500 text-center flex flex-col items-center justify-center gap-2">
+                                        <i data-lucide="info" class="w-6 h-6 text-gray-300"></i>
+                                        <p>Kelas tidak ditemukan.</p>
+                                    </div>
+                                </ul>
                             </div>
                         </div>
-                        <div>
+                        <div x-data="{
+                            open: false,
+                            options: [
+                                { value: 'L', label: 'Laki-laki' },
+                                { value: 'P', label: 'Perempuan' }
+                            ],
+                            get currentLabel() {
+                                let selected = this.options.find(o => o.value === formData.gender);
+                                return selected ? selected.label : 'Pilih Gender...';
+                            }
+                        }" class="relative group" @click.outside="open = false">
+
                             <label class="block text-sm font-medium text-gray-700 mb-1.5">Gender</label>
-                            <div class="relative">
-                                <select x-model="formData.gender"
-                                    class="w-full pl-10 pr-8 py-2.5 rounded-xl border border-gray-200 bg-white outline-none focus:ring-2 focus:ring-[#37517e]/20 appearance-none">
-                                    <option value="">Pilih...</option>
-                                    <option value="L">Laki-laki</option>
-                                    <option value="P">Perempuan</option>
-                                </select>
-                                <div
-                                    class="absolute inset-y-0 left-3 flex items-center pointer-events-none text-gray-400">
-                                    <i data-lucide="users" class="w-4 h-4"></i>
-                                </div>
-                                <div
-                                    class="absolute inset-y-0 right-3 flex items-center pointer-events-none text-gray-400">
-                                    <i data-lucide="chevron-down" class="w-4 h-4"></i>
-                                </div>
+
+                            <button type="button" @click="open = !open"
+                                class="w-full pl-10 pr-10 py-2.5 text-left border bg-white focus:outline-none transition-all flex items-center justify-between relative z-10"
+                                :class="open ? 'rounded-t-xl border-[#37517e] ring-2 ring-[#37517e]/20 border-b-transparent' :
+                                    'rounded-xl border-gray-200 group-hover:border-[#37517e]/50'">
+                                <span x-text="currentLabel" class="block truncate"
+                                    :class="formData.gender ? 'text-gray-900' : 'text-gray-500'">
+                                </span>
+
+                                <span
+                                    class="absolute inset-y-0 right-0 flex flex-col justify-center pr-3 pointer-events-none text-gray-400">
+                                    <i data-lucide="chevron-down"
+                                        class="w-4 h-4 transition-transform duration-300 ease-in-out"
+                                        :class="open ? 'rotate-180' : ''"></i>
+                                </span>
+                            </button>
+
+                            <div
+                                class="absolute top-[38px] left-3 flex items-center pointer-events-none text-gray-400 z-20">
+                                <i data-lucide="users" class="w-4 h-4"></i>
+                            </div>
+
+                            <div x-show="open" x-transition:enter="transition ease-out duration-200"
+                                x-transition:enter-start="transform opacity-0 -translate-y-2"
+                                x-transition:enter-end="transform opacity-100 translate-y-0"
+                                x-transition:leave="transition ease-in duration-150"
+                                x-transition:leave-start="transform opacity-100 translate-y-0"
+                                x-transition:leave-end="transform opacity-0 -translate-y-2"
+                                class="absolute z-20 -mt-[2px] w-full bg-white shadow-[0_10px_20px_-5px_rgba(0,0,0,0.1)] rounded-b-xl border border-t-0 border-[#37517e] overflow-hidden"
+                                style="display: none;">
+
+                                <ul class="py-1">
+                                    <template x-for="option in options" :key="option.value">
+                                        <li @click="formData.gender = option.value; open = false"
+                                            class="cursor-pointer select-none relative py-2.5 pl-4 pr-9 text-sm hover:bg-indigo-50/80 transition-colors duration-150"
+                                            :class="formData.gender === option.value ?
+                                                'bg-indigo-50 text-[#37517e] font-semibold' : 'text-gray-700'">
+
+                                            <span x-text="option.label" class="block truncate"></span>
+
+                                            <span x-show="formData.gender === option.value"
+                                                class="absolute inset-y-0 right-0 flex items-center pr-3 text-[#37517e]">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                                                    viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                    stroke-width="2.5" stroke-linecap="round"
+                                                    stroke-linejoin="round">
+                                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                                </svg>
+                                            </span>
+                                        </li>
+                                    </template>
+                                </ul>
                             </div>
                         </div>
                     </div>

@@ -1,7 +1,7 @@
 <div id="loginWrapper" class="min-h-screen flex bg-white overflow-hidden">
 
     <div id="leftPanel" wire:ignore class="hidden md:flex w-1/2 relative bg-[#37517e] items-center justify-center p-10 overflow-hidden opacity-0">
-        <div class="absolute inset-0 bg-center bg-cover opacity-10" style="background-image: url('/images/upnvj.jpg');">
+        <div class="absolute inset-0 bg-center bg-cover opacity-10" style="background-image: url('/images/smkn1cikbar.jpeg');">
         </div>
 
         <div class="relative z-10 text-white text-center max-w-md">
@@ -47,22 +47,22 @@
                         </span>
 
                         <input wire:model="username" type="number" placeholder="Masukkan username..." class="peer w-full text-sm
-                                   rounded-lg
-                                   pl-8 pr-3 py-2.5
-                                   bg-[#fafafa]
-                                   border-2
-                                   @error('username') border-red-500 @else border-[#37517e] @enderror
-                                   placeholder-gray-400
-                                   placeholder:opacity-0
-                                   placeholder:translate-x-[-8px]
-                                   placeholder:transition-all
-                                   placeholder:duration-300
-                                   focus:placeholder:opacity-100
-                                   focus:placeholder:translate-x-0
-                                   focus:outline-none
-                                   focus:border-[#37517e]
-                                   focus:ring-1
-                                   focus:ring-[#37517e]/30">
+                                    rounded-lg
+                                    pl-8 pr-3 py-2.5
+                                    bg-[#fafafa]
+                                    border-2
+                                    @error('username') border-red-500 @else border-[#37517e] @enderror
+                                    placeholder-gray-400
+                                    placeholder:opacity-0
+                                    placeholder:translate-x-[-8px]
+                                    placeholder:transition-all
+                                    placeholder:duration-300
+                                    focus:placeholder:opacity-100
+                                    focus:placeholder:translate-x-0
+                                    focus:outline-none
+                                    focus:border-[#37517e]
+                                    focus:ring-1
+                                    focus:ring-[#37517e]/30">
                     </div>
                     @error('username') <span class="text-xs text-red-600 mt-1 block">{{ $message }}</span> @enderror
                 </div>
@@ -79,22 +79,22 @@
 
                         <input wire:model="password" :type="show ? 'text' : 'password'"
                             placeholder="Masukkan password.." class="peer w-full text-sm
-                                   rounded-lg
-                                   pl-9 pr-10 py-2.5
-                                   bg-[#fafafa]
-                                   border-2
-                                   @error('password') border-red-500 @else border-[#37517e] @enderror
-                                   placeholder-gray-400
-                                   placeholder:opacity-0
-                                   placeholder:-translate-x-2
-                                   placeholder:transition-all
-                                   placeholder:duration-500
-                                   focus:placeholder:opacity-100
-                                   focus:placeholder:translate-x-0
-                                   focus:outline-none
-                                   focus:border-[#37517e]
-                                   focus:ring-1
-                                   focus:ring-[#37517e]/30">
+                                    rounded-lg
+                                    pl-9 pr-10 py-2.5
+                                    bg-[#fafafa]
+                                    border-2
+                                    @error('password') border-red-500 @else border-[#37517e] @enderror
+                                    placeholder-gray-400
+                                    placeholder:opacity-0
+                                    placeholder:-translate-x-2
+                                    placeholder:transition-all
+                                    placeholder:duration-500
+                                    focus:placeholder:opacity-100
+                                    focus:placeholder:translate-x-0
+                                    focus:outline-none
+                                    focus:border-[#37517e]
+                                    focus:ring-1
+                                    focus:ring-[#37517e]/30">
 
                         <button type="button" @click="show = !show"
                             class="absolute inset-y-0 right-0 px-3 flex items-center text-gray-400 hover:text-[#37517e] focus:outline-none">
@@ -107,12 +107,12 @@
                 </div>
 
                 <button type="submit" class="w-full mt-2
-                           bg-[#37517e] text-white
-                           py-2.5 rounded-lg
-                           font-semibold text-sm
-                           hover:bg-[#2c4064]
-                           transition duration-200
-                           disabled:opacity-50 disabled:cursor-not-allowed">
+                            bg-[#37517e] text-white
+                            py-2.5 rounded-lg
+                            font-semibold text-sm
+                            hover:bg-[#2c4064]
+                            transition duration-200
+                            disabled:opacity-50 disabled:cursor-not-allowed">
                     <span wire:loading.remove>Login</span>
                     <span wire:loading>Memproses...</span>
                 </button>

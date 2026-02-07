@@ -118,12 +118,12 @@
                 <div class="transition-all duration-300 ease-out {{ Request::routeIs('dashboard') ? '-translate-y-2' : '' }}">
                     <i data-lucide="house"
                         class="w-6 h-6 transition-colors duration-300 
-                       {{ Request::routeIs('dashboard') ? 'text-[#37517e] fill-[#37517e]/20' : 'text-gray-400 group-hover:text-gray-600' }}">
+                        {{ Request::routeIs('dashboard') ? 'text-[#37517e] fill-[#37517e]/20' : 'text-gray-400 group-hover:text-gray-600' }}">
                     </i>
                 </div>
 
                 <span class="absolute bottom-2 text-[10px] font-bold text-[#37517e] transition-all duration-300 
-                      {{ Request::routeIs('dashboard') ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none' }}">
+                        {{ Request::routeIs('dashboard') ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none' }}">
                     Beranda
                 </span>
             </a>
@@ -136,12 +136,12 @@
                 <div class="transition-all duration-300 ease-out {{ Request::routeIs('siswa') ? '-translate-y-2' : '' }}">
                     <i data-lucide="users"
                         class="w-6 h-6 transition-colors duration-300 
-                       {{ Request::routeIs('siswa') ? 'text-[#37517e] fill-[#37517e]/20' : 'text-gray-400 group-hover:text-gray-600' }}">
+                        {{ Request::routeIs('siswa') ? 'text-[#37517e] fill-[#37517e]/20' : 'text-gray-400 group-hover:text-gray-600' }}">
                     </i>
                 </div>
 
                 <span class="absolute bottom-2 text-[10px] font-bold text-[#37517e] transition-all duration-300 
-                      {{ Request::routeIs('siswa') ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none' }}">
+                        {{ Request::routeIs('siswa') ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none' }}">
                     Siswa
                 </span>
             </a>
@@ -154,12 +154,12 @@
                 <div class="transition-all duration-300 ease-out {{ Request::routeIs('pelanggaran') ? '-translate-y-2' : '' }}">
                     <i data-lucide="shield-off"
                         class="w-6 h-6 transition-colors duration-300 
-                       {{ Request::routeIs('pelanggaran') ? 'text-[#37517e] fill-[#37517e]/20' : 'text-gray-400 group-hover:text-gray-600' }}">
+                        {{ Request::routeIs('pelanggaran') ? 'text-[#37517e] fill-[#37517e]/20' : 'text-gray-400 group-hover:text-gray-600' }}">
                     </i>
                 </div>
 
                 <span class="absolute bottom-2 text-[10px] font-bold text-[#37517e] transition-all duration-300 
-                      {{ Request::routeIs('pelanggaran') ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none' }}">
+                        {{ Request::routeIs('pelanggaran') ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none' }}">
                     Point
                 </span>
             </a>
@@ -172,12 +172,12 @@
                 <div class="transition-all duration-300 ease-out {{ Request::routeIs('profile') ? '-translate-y-2' : '' }}">
                     <i data-lucide="user"
                         class="w-6 h-6 transition-colors duration-300 
-                       {{ Request::routeIs('profile') ? 'text-[#37517e] fill-[#37517e]/20' : 'text-gray-400 group-hover:text-gray-600' }}">
+                        {{ Request::routeIs('profile') ? 'text-[#37517e] fill-[#37517e]/20' : 'text-gray-400 group-hover:text-gray-600' }}">
                     </i>
                 </div>
 
                 <span class="absolute bottom-2 text-[10px] font-bold text-[#37517e] transition-all duration-300 
-                      {{ Request::routeIs('profile') ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none' }}">
+                        {{ Request::routeIs('profile') ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none' }}">
                     Profil
                 </span>
             </a>

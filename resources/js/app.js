@@ -36,17 +36,16 @@ document.addEventListener("livewire:initialized", () => {
     });
 });
 
-// Variabel global untuk menyimpan instance chart agar bisa di-destroy
+// Variabel global untuk menyimpan instance chart biar bisa di-destroy
 var chartInstance1 = null;
 var chartInstance2 = null;
 
 // Fungsi render chart
 function renderCharts() {
-    // Hapus chart lama sebelum render baru (Mencegah Duplikasi)
     if (chartInstance1) chartInstance1.destroy();
     if (chartInstance2) chartInstance2.destroy();
 
-    // --- CHART 1: AREA (Kehadiran) ---
+    // Kehadiran
     var optionsArea = {
         series: [
             { name: "Hadir", data: [1150, 1180, 1190, 1160, 1180, 1200] },
@@ -157,10 +156,9 @@ function renderCharts() {
 document.addEventListener("DOMContentLoaded", () => {
     setTimeout(() => {
         renderCharts();
-    }, 500); // 2000ms = 2 detik
+    }, 500);
 });
 
-// Jika menggunakan Livewire navigation, tetap panggil saat navigasi
 document.addEventListener("livewire:navigated", () => {
     setTimeout(() => {
         renderCharts();
@@ -172,7 +170,6 @@ document.addEventListener("DOMContentLoaded", function () {
     const kiri = document.getElementById("leftPanel");
     const kanan = document.getElementById("rightPanel");
 
-    // Kita set posisi awal (from) dan biarkan GSAP menganimasikan ke posisi asli
     gsap.fromTo(
         kiri,
         { x: "-100%", opacity: 0 },
@@ -187,14 +184,12 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 // Animasi Berhasil Login (Exit Animation)
-// Di file JS Login
 document.addEventListener("livewire:init", () => {
     Livewire.on("loginSuccess", () => {
         const kiri = document.getElementById("leftPanel");
         const kanan = document.getElementById("rightPanel");
         const wrap = document.getElementById("loginWrapper");
 
-        // Hapus transisi CSS bawaan agar GSAP ambil alih total
         [kiri, kanan].forEach((el) => {
             if (el) el.style.transition = "none";
         });
@@ -205,12 +200,11 @@ document.addEventListener("livewire:init", () => {
             },
         });
 
-        // EFEK MEMBELAH (Cepat & Tajam)
         tl.to(kiri, {
             xPercent: -100,
             opacity: 0,
-            duration: 0.7, // Dipercepat biar snappy
-            ease: "expo.in", // Akselerasi keluar (makin lama makin cepat)
+            duration: 0.7,
+            ease: "expo.in",
         })
             .to(
                 kanan,
@@ -221,13 +215,12 @@ document.addEventListener("livewire:init", () => {
                     ease: "expo.in",
                 },
                 "<",
-            ) // Jalan bareng kiri
+            )
 
-            // Background memutih sedikit lebih cepat agar mata siap ke dashboard
             .to(
                 wrap,
                 {
-                    backgroundColor: "#f3f4f6", // Sesuaikan dengan warna BG Dashboard kamu
+                    backgroundColor: "#f3f4f6",
                     duration: 0.4,
                 },
                 "-=0.5",
@@ -236,24 +229,20 @@ document.addEventListener("livewire:init", () => {
 });
 
 // Animasi sidebar login
-// Di file JS Dashboard / app.js
 document.addEventListener("DOMContentLoaded", function () {
     const sidebar = document.getElementById("sidebar");
     const topbar = document.getElementById("topbar");
     const statCards = document.querySelectorAll(".gsap-card");
     const charts = document.querySelectorAll(".gsap-chart");
 
-    // Timeline dimulai sedikit lebih cepat (delay dikurangi jadi 0.1)
-    // Agar user tidak bengong nunggu animasi mulai
     const tl = gsap.timeline({ delay: 0.1 });
 
-    // --- PHASE 1: STRUKTUR UTAMA (Sidebar & Topbar) ---
-    // Durasi 1s, tapi terasa smooth karena expo.out
+    // Sidebar & Topbar
     tl.to(sidebar, {
         x: "0%",
         opacity: 1,
         duration: 1.0,
-        ease: "expo.out", // Deselerasi (Cepat di awal, ngerem di akhir)
+        ease: "expo.out",
         onComplete: () => {
             sidebar.classList.remove("opacity-0", "-translate-x-full");
             gsap.set(sidebar, { clearProps: "all" });
@@ -272,19 +261,17 @@ document.addEventListener("DOMContentLoaded", function () {
                 },
             },
             "<",
-        ) // Sidebar & Topbar masuk barengan
+        )
 
-        // --- PHASE 2: WATERFALL KONTEN (Kartu Statistik) ---
-        // Start di "-=0.7" artinya: Mulai saat Sidebar & Topbar BARU JALAN 0.3 detik.
-        // Ini rahasia agar terlihat "Fluid/Menyatu"
+        // Statistik
         .to(
             statCards,
             {
                 y: 0,
                 opacity: 1,
                 duration: 0.8,
-                ease: "power3.out", // Easing sedikit lebih lembut dari sidebar
-                stagger: 0.08, // Jeda antar kartu dipercepat (biar ga lambat nungguin satu2)
+                ease: "power3.out",
+                stagger: 0.08,
                 onComplete: () => {
                     statCards.forEach((el) => {
                         el.classList.remove("opacity-0", "translate-y-10");
@@ -295,8 +282,7 @@ document.addEventListener("DOMContentLoaded", function () {
             "-=0.7",
         )
 
-        // --- PHASE 3: GRAFIK (Penutup) ---
-        // Masuk berurutan setelah kartu mulai muncul
+        // Grafik
         .to(
             charts,
             {
@@ -407,3 +393,39 @@ document.addEventListener("DOMContentLoaded", () => {
         );
     });
 });
+
+// Animasi hitung angka
+document.addEventListener("DOMContentLoaded", initCounter);
+document.addEventListener("livewire:navigated", initCounter);
+
+function initCounter() {
+    const counters = document.querySelectorAll(".counter");
+
+    const observer = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+            if (!entry.isIntersecting) return;
+
+            const el = entry.target;
+            const target = parseInt(el.dataset.target);
+            let count = 0;
+
+            const update = () => {
+                const inc = Math.ceil(target / 75);
+
+                if (count < target) {
+                    count += inc;
+                    el.innerText = count.toLocaleString();
+                    requestAnimationFrame(update);
+                } else {
+                    el.innerText = target.toLocaleString();
+                }
+            };
+
+            update();
+            observer.unobserve(el);
+        });
+    }, { threshold: 0.6 });
+
+    counters.forEach(c => observer.observe(c));
+}
+

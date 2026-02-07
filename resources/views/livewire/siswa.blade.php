@@ -1,95 +1,10 @@
-<div x-data="{
-    search: '',
-    rowsPerPage: 5,
-    currentPage: 1,
-    drawerOpen: false,
-    drawerMode: 'add', // 'add', 'edit', 'delete'
-    sortCol: 'name',
-    sortAsc: true,
-    formData: { id: null, name: '', nis: '', class: '', gender: '' },
-    students: [
-        { id: 1, name: 'Aditya Pratama', nis: '20231001', class: 'XII RPL 1', gender: 'L' },
-        { id: 2, name: 'Bunga Citra', nis: '20231002', class: 'XII RPL 1', gender: 'P' },
-        { id: 3, name: 'Chandra Wijaya', nis: '20231003', class: 'XII TKJ 2', gender: 'L' },
-        { id: 4, name: 'Dinda Kirana', nis: '20231004', class: 'XI DKV 1', gender: 'P' },
-        { id: 5, name: 'Erik Firmansyah', nis: '20231005', class: 'X TSM 1', gender: 'L' },
-        { id: 6, name: 'Fajar Nugraha', nis: '20231006', class: 'XI RPL 2', gender: 'L' },
-        { id: 7, name: 'Gita Savitri', nis: '20231007', class: 'XII DKV 2', gender: 'P' },
-        { id: 8, name: 'Hendra Gunawan', nis: '20231008', class: 'X RPL 1', gender: 'L' },
-        { id: 9, name: 'Indah Pertiwi', nis: '20231009', class: 'XI TKJ 1', gender: 'P' },
-        { id: 10, name: 'Joko Anwar', nis: '20231010', class: 'XII MM 1', gender: 'L' },
-        { id: 11, name: 'Kartika Sari', nis: '20231011', class: 'X AKL 2', gender: 'P' },
-    ],
-    get filteredStudents() {
-        let result = this.students;
-        if (this.search !== '') {
-            const q = this.search.toLowerCase();
-            result = result.filter(s =>
-                s.name.toLowerCase().includes(q) || s.nis.includes(q) || s.class.toLowerCase().includes(q)
-            );
-        }
-        result = result.sort((a, b) => {
-            let valA = a[this.sortCol].toString().toLowerCase();
-            let valB = b[this.sortCol].toString().toLowerCase();
-            if (valA < valB) return this.sortAsc ? -1 : 1;
-            if (valA > valB) return this.sortAsc ? 1 : -1;
-            return 0;
-        });
-        return result;
-    },
-    get totalPages() { return Math.ceil(this.filteredStudents.length / this.rowsPerPage); },
-    get paginatedStudents() {
-        let start = (this.currentPage - 1) * this.rowsPerPage;
-        return this.filteredStudents.slice(start, start + this.rowsPerPage);
-    },
-    // Logika Pagination DataTables
-    get pageNumbers() {
-        let pages = [];
-        let total = this.totalPages;
-        let current = this.currentPage;
-
-        if (total <= 7) {
-            for (let i = 1; i <= total; i++) pages.push(i);
-        } else {
-            if (current <= 4) {
-                pages = [1, 2, 3, 4, 5, '...', total];
-            } else if (current >= total - 3) {
-                pages = [1, '...', total - 4, total - 3, total - 2, total - 1, total];
-            } else {
-                pages = [1, '...', current - 1, current, current + 1, '...', total];
-            }
-        }
-        return pages;
-    },
-    get drawerTitle() {
-        if (this.drawerMode === 'add') return 'Tambah Siswa Baru';
-        if (this.drawerMode === 'edit') return 'Edit Data Siswa';
-        return 'Konfirmasi Hapus';
-    },
-    get drawerDescription() {
-        if (this.drawerMode === 'add') return 'Silakan lengkapi formulir di bawah ini untuk mendaftarkan siswa baru ke dalam sistem database sekolah.';
-        if (this.drawerMode === 'edit') return 'Lakukan perubahan pada data siswa di bawah ini. Pastikan informasi sudah valid sebelum disimpan.';
-        return 'Tindakan ini akan menghapus data siswa secara permanen dari sistem. Data yang sudah dihapus tidak dapat dikembalikan.';
-    },
-    sortBy(col) {
-        if (this.sortCol === col) { this.sortAsc = !this.sortAsc; } else {
-            this.sortCol = col;
-            this.sortAsc = true;
-        }
-    },
-    openDrawer(mode, student = null) {
-        this.drawerMode = mode;
-        if (mode === 'add') { this.formData = { id: null, name: '', nis: '', class: '', gender: '' }; } else { this.formData = { ...student }; }
-        this.drawerOpen = true;
-    },
-    updateRows() { this.currentPage = 1; },
-    init() {
-        // Re-initialize icons when alpine loads or updates
-        this.$watch('paginatedStudents', () => { setTimeout(() => lucide.createIcons(), 50); });
-        this.$watch('drawerOpen', () => { setTimeout(() => lucide.createIcons(), 50); });
-    }
-}" x-init="init()" class="w-full max-w-7xl mx-auto font-sans text-gray-800">
-<x-slot name="header">Manajemen Data Siswa</x-slot>
+<div x-data='siswaData(
+    @json($students),
+    "{{ route('siswa.store') }}",
+    "{{ csrf_token() }}"
+)'
+    class="w-full max-w-7xl mx-auto font-sans text-gray-800">
+    <x-slot name="header">Manajemen Data Siswa</x-slot>
     <div class="flex flex-col md:flex-row justify-between items-stretch md:items-center gap-4 mb-6">
         <div class="gsap-card opacity-0 translate-y-10 w-full md:w-80 relative group">
             <div
@@ -297,7 +212,9 @@
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1.5">Nama Lengkap</label>
                         <div class="relative">
-                            <input type="text" x-model="formData.name" placeholder="Masukkan nama lengkap siswa"
+                            <input type="text" x-model="formData.name"
+                                @input="formData.name = formData.name.replace(/\b\w/g, l => l.toUpperCase())"
+                                placeholder="Masukkan nama lengkap siswa"
                                 class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 focus:border-[#37517e] focus:ring-2 focus:ring-[#37517e]/20 outline-none transition-all placeholder:text-gray-400">
                             <div class="absolute inset-y-0 left-3 flex items-center pointer-events-none text-gray-400">
                                 <i data-lucide="user" class="w-4 h-4"></i>
@@ -360,15 +277,25 @@
                     class="flex-1 px-4 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-xl font-medium hover:bg-gray-100 transition shadow-sm">
                     Batal
                 </button>
-                <button x-show="drawerMode !== 'delete'"
-                    class="flex-[2] px-4 py-2.5 bg-[#37517e] text-white rounded-xl font-medium hover:bg-[#2a3f63] shadow-lg shadow-[#37517e]/20 transition flex items-center justify-center gap-2">
-                    <i data-lucide="save" class="w-4 h-4"></i>
-                    Simpan Data
+
+                <button x-show="drawerMode !== 'delete'" @click="saveData()" :disabled="isLoading"
+                    class="flex-[2] px-4 py-2.5 bg-[#37517e] text-white rounded-xl font-medium hover:bg-[#2a3f63] shadow-lg shadow-[#37517e]/20 transition flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                    <i x-show="!isLoading" data-lucide="save" class="w-4 h-4"></i>
+                    <svg x-show="isLoading" class="animate-spin h-4 w-4 text-white"
+                        xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                            stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                        </path>
+                    </svg>
+                    <span x-text="isLoading ? 'Menyimpan...' : 'Simpan Data'"></span>
                 </button>
-                <button x-show="drawerMode === 'delete'"
-                    class="flex-[2] px-4 py-2.5 bg-red-600 text-white rounded-xl font-medium hover:bg-red-700 shadow-lg shadow-red-600/20 transition flex items-center justify-center gap-2">
-                    <i data-lucide="trash-2" class="w-4 h-4"></i>
-                    Ya, Hapus Data
+
+                <button x-show="drawerMode === 'delete'" @click="deleteData()" :disabled="isLoading"
+                    class="flex-[2] px-4 py-2.5 bg-red-600 text-white rounded-xl font-medium hover:bg-red-700 shadow-lg shadow-red-600/20 transition flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                    <i x-show="!isLoading" data-lucide="trash-2" class="w-4 h-4"></i>
+                    <span x-text="isLoading ? 'Menghapus...' : 'Ya, Hapus Data'"></span>
                 </button>
             </div>
         </div>

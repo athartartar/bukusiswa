@@ -4,14 +4,25 @@ namespace App\Livewire;
 
 use Livewire\Component;
 use Livewire\Attributes\Layout;
-use Illuminate\Support\Facades\Auth;
+// BAGIAN INI DIUBAH (Kasih alias 'SiswaModel')
+use App\Models\Siswa as SiswaModel;
 
 class Siswa extends Component
 {
-    // Kita set layoutnya ke components.layouts.app
-    #[Layout('components.layouts.app')] 
+    #[Layout('components.layouts.app')]
     public function render()
     {
-        return view('livewire.siswa');
+        // Panggil pake nama alias tadi
+        $students = SiswaModel::select(
+            'id_siswa as id',
+            'nis',
+            'namalengkap as name',
+            'kelas as class',
+            'jeniskelamin as gender'
+        )->orderBy('id_siswa', 'desc')->get();
+
+        return view('livewire.siswa', [
+            'students' => $students
+        ]);
     }
 }

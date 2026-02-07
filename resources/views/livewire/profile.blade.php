@@ -220,9 +220,9 @@
 
     </form>
 
-    <div class="mt-3 flex justify-center">
+    <div class="mt-3 flex justify-center md:justify-start">
         <button id="logoutButton"
-            class="flex w-full items-center px-4 py-3 text-white bg-[#cc0000] hover:bg-[#800000] hover:text-red-200 rounded-lg transition-colors">
+            class="flex w-full md:w-auto items-center px-4 py-3 text-white bg-[#cc0000] hover:bg-[#800000] hover:text-red-200 rounded-lg transition-colors">
             <i data-lucide="log-out" class="w-5 h-5 mr-3"></i>
             <span class="font-medium">Logout</span>
         </button>

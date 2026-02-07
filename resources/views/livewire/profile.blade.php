@@ -215,9 +215,22 @@
                         </p>
                     </div>
                 @endif
-
             </div>
         </div>
+
     </form>
+
+    <div class="mt-3 flex justify-center">
+        <button id="logoutButton"
+            class="flex w-full items-center px-4 py-3 text-white bg-[#cc0000] hover:bg-[#800000] hover:text-red-200 rounded-lg transition-colors">
+            <i data-lucide="log-out" class="w-5 h-5 mr-3"></i>
+            <span class="font-medium">Logout</span>
+        </button>
+    </div>
+
+    <form id="logout-form" action="{{ route('logout') }}" method="POST" class="hidden">
+        @csrf
+    </form>
+
 </div>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>

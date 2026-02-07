@@ -227,63 +227,103 @@ document.addEventListener("livewire:init", () => {
             );
     });
 });
+const SESSION_KEY = "dashboard_intro_played";
 
-// Animasi sidebar login
+// 1. Animasi Masuk
 document.addEventListener("DOMContentLoaded", function () {
     const sidebar = document.getElementById("sidebar");
     const topbar = document.getElementById("topbar");
+    const footbar = document.getElementById("footbar"); // Footbar didefinisikan di sini
     const statCards = document.querySelectorAll(".gsap-card");
     const charts = document.querySelectorAll(".gsap-chart");
 
-    const tl = gsap.timeline({ delay: 0.1 });
+    if (!sidebar) return;
 
-    // Sidebar & Topbar
-    tl.to(sidebar, {
-        x: "0%",
-        opacity: 1,
-        duration: 1.0,
-        ease: "expo.out",
-        onComplete: () => {
-            sidebar.classList.remove("opacity-0", "-translate-x-full");
-            gsap.set(sidebar, { clearProps: "all" });
-        },
-    })
-        .to(
-            topbar,
-            {
-                y: "0%",
+    if (!sessionStorage.getItem(SESSION_KEY)) {
+        const tlStructure = gsap.timeline({ delay: 0.1 });
+
+        // Animasi Sidebar
+        tlStructure
+            .to(sidebar, {
+                x: "0%",
                 opacity: 1,
                 duration: 1.0,
                 ease: "expo.out",
                 onComplete: () => {
-                    topbar.classList.remove("opacity-0", "-translate-y-full");
-                    gsap.set(topbar, { clearProps: "all" });
+                    sidebar.classList.remove("opacity-0", "-translate-x-full");
+                    gsap.set(sidebar, { clearProps: "all" });
                 },
-            },
-            "<",
-        )
-
-        // Statistik
-        .to(
-            statCards,
-            {
-                y: 0,
-                opacity: 1,
-                duration: 0.8,
-                ease: "power3.out",
-                stagger: 0.08,
-                onComplete: () => {
-                    statCards.forEach((el) => {
-                        el.classList.remove("opacity-0", "translate-y-10");
-                        gsap.set(el, { clearProps: "all" });
-                    });
+            })
+            // Animasi Topbar
+            .to(
+                topbar,
+                {
+                    y: "0%",
+                    opacity: 1,
+                    duration: 1.0,
+                    ease: "expo.out",
+                    onComplete: () => {
+                        topbar.classList.remove(
+                            "opacity-0",
+                            "-translate-y-full",
+                        );
+                        gsap.set(topbar, { clearProps: "all" });
+                    },
                 },
-            },
-            "-=0.7",
-        )
+                "<",
+            );
 
-        // Grafik
-        .to(
+        if (footbar) {
+            tlStructure.to(
+                footbar,
+                {
+                    y: "0%",
+                    opacity: 1,
+                    duration: 0.8,
+                    ease: "expo.out",
+                },
+                "-=0.5",
+            );
+        }
+
+        sessionStorage.setItem(SESSION_KEY, "true");
+    } else {
+        if (sidebar) {
+            sidebar.classList.remove("opacity-0", "-translate-x-full");
+            gsap.set(sidebar, { x: "0%", opacity: 1, clearProps: "all" });
+        }
+
+        if (topbar) {
+            topbar.classList.remove("opacity-0", "-translate-y-full");
+            gsap.set(topbar, { y: "0%", opacity: 1, clearProps: "all" });
+        }
+
+        if (footbar) {
+            gsap.set(footbar, { y: "0%", opacity: 1 });
+        }
+    }
+
+    // ANIMASI KONTEN
+    const tlContent = gsap.timeline({ delay: 0.4 });
+
+    if (statCards.length > 0) {
+        tlContent.to(statCards, {
+            y: 0,
+            opacity: 1,
+            duration: 0.8,
+            ease: "power3.out",
+            stagger: 0.08,
+            onComplete: () => {
+                statCards.forEach((el) => {
+                    el.classList.remove("opacity-0", "translate-y-10");
+                    gsap.set(el, { clearProps: "all" });
+                });
+            },
+        });
+    }
+
+    if (charts.length > 0) {
+        tlContent.to(
             charts,
             {
                 y: 0,
@@ -300,22 +340,10 @@ document.addEventListener("DOMContentLoaded", function () {
             },
             "-=0.6",
         );
+    }
 });
 
-// Animasi in Footbar (Mobile)
-document.addEventListener("DOMContentLoaded", () => {
-    const footbar = document.querySelector("#footbar");
-
-    gsap.to(footbar, {
-        y: 0,
-        opacity: 1,
-        duration: 0.8,
-        ease: "expo.out",
-        delay: 1,
-    });
-});
-
-// Animasi Logout
+// 2. Animasi Logout
 document.addEventListener("DOMContentLoaded", () => {
     const logoutButton = document.getElementById("logoutButton");
     const sidebar = document.getElementById("sidebar");
@@ -324,108 +352,108 @@ document.addEventListener("DOMContentLoaded", () => {
     const charts = document.querySelectorAll(".gsap-chart");
     const footbar = document.querySelector("#footbar");
 
-    logoutButton.addEventListener("click", (e) => {
-        e.preventDefault(); // mencegah aksi default
+    if (logoutButton) {
+        logoutButton.addEventListener("click", (e) => {
+            e.preventDefault();
+            sessionStorage.removeItem(SESSION_KEY);
 
-        const tlLogout = gsap.timeline({
-            onComplete: () => {
-                // Submit form sekali setelah animasi selesai
-                document.getElementById("logout-form").submit();
-            },
-        });
+            const tlLogout = gsap.timeline({
+                onComplete: () => {
+                    document.getElementById("logout-form").submit();
+                },
+            });
 
-        // Sidebar keluar ke kiri
-        tlLogout.to(sidebar, {
-            x: "-100%",
-            opacity: 0,
-            duration: 0.8,
-            ease: "expo.in",
-        });
-
-        // Topbar keluar ke atas, bersamaan dengan sidebar
-        tlLogout.to(
-            topbar,
-            {
-                y: "-100%",
+            tlLogout.to(sidebar, {
+                x: "-100%",
                 opacity: 0,
                 duration: 0.8,
                 ease: "expo.in",
-            },
-            "<",
-        );
+            });
 
-        // Stat cards keluar ke bawah
-        tlLogout.to(
-            statCards,
-            {
-                y: 20,
-                opacity: 0,
-                duration: 0.5,
-                stagger: 0.05,
-                ease: "power2.in",
-            },
-            "-=0.6",
-        );
+            tlLogout.to(
+                topbar,
+                {
+                    y: "-100%",
+                    opacity: 0,
+                    duration: 0.8,
+                    ease: "expo.in",
+                },
+                "<",
+            );
 
-        // Charts keluar ke bawah
-        tlLogout.to(
-            charts,
-            {
-                y: 20,
-                opacity: 0,
-                duration: 0.5,
-                stagger: 0.1,
-                ease: "power2.in",
-            },
-            "-=0.45",
-        );
+            tlLogout.to(
+                statCards,
+                {
+                    y: 20,
+                    opacity: 0,
+                    duration: 0.5,
+                    stagger: 0.05,
+                    ease: "power2.in",
+                },
+                "-=0.6",
+            );
 
-        // Footbar turun/fade out di HP
-        tlLogout.to(
-            footbar,
-            {
-                y: 50,
-                opacity: 0,
-                duration: 0.6,
-                ease: "expo.in",
-            },
-            "-=0.5",
-        );
-    });
+            tlLogout.to(
+                charts,
+                {
+                    y: 20,
+                    opacity: 0,
+                    duration: 0.5,
+                    stagger: 0.1,
+                    ease: "power2.in",
+                },
+                "-=0.45",
+            );
+
+            if (footbar) {
+                tlLogout.to(
+                    footbar,
+                    {
+                        y: 50,
+                        opacity: 0,
+                        duration: 0.6,
+                        ease: "expo.in",
+                    },
+                    "-=0.5",
+                );
+            }
+        });
+    }
 });
 
-// Animasi hitung angka
 document.addEventListener("DOMContentLoaded", initCounter);
 document.addEventListener("livewire:navigated", initCounter);
 
 function initCounter() {
     const counters = document.querySelectorAll(".counter");
 
-    const observer = new IntersectionObserver(entries => {
-        entries.forEach(entry => {
-            if (!entry.isIntersecting) return;
+    const observer = new IntersectionObserver(
+        (entries) => {
+            entries.forEach((entry) => {
+                if (!entry.isIntersecting) return;
 
-            const el = entry.target;
-            const target = parseInt(el.dataset.target);
-            let count = 0;
+                const el = entry.target;
+                const target = parseInt(el.dataset.target);
+                let count = 0;
 
-            const update = () => {
-                const inc = Math.ceil(target / 75);
+                const update = () => {
+                    const inc = Math.ceil(target / 75);
 
-                if (count < target) {
-                    count += inc;
-                    el.innerText = count.toLocaleString();
-                    requestAnimationFrame(update);
-                } else {
-                    el.innerText = target.toLocaleString();
-                }
-            };
+                    if (count < target) {
+                        count += inc;
+                        el.innerText = count.toLocaleString();
+                        requestAnimationFrame(update);
+                    } else {
+                        el.innerText = target.toLocaleString();
+                    }
+                };
 
-            update();
-            observer.unobserve(el);
-        });
-    }, { threshold: 0.6 });
+                update();
+                observer.unobserve(el);
+            });
+        },
+        { threshold: 0.6 },
+    );
 
-    counters.forEach(c => observer.observe(c));
+    counters.forEach((c) => observer.observe(c));
 }
-

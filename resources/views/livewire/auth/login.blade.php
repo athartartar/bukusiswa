@@ -133,3 +133,8 @@
 
     </div>
 </div>
+<script>
+    if (sessionStorage.getItem("dashboard_intro_played")) {
+        sessionStorage.removeItem("dashboard_intro_played");
+    }
+</script>

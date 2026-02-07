@@ -2,8 +2,6 @@
     <x-slot name="header">Overview Statistik</x-slot>
 
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-
-    <!-- Total Siswa -->
     <div class="gsap-card opacity-0 translate-y-10 bg-white p-6 rounded-2xl shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07),0_10px_20px_-2px_rgba(0,0,0,0.04)] border border-gray-100 flex items-center transition-transform hover:-translate-y-1 duration-300">
         <div class="p-4 rounded-xl bg-blue-50 text-blue-600 mr-4">
             <i data-lucide="users" class="w-6 h-6"></i>
@@ -13,8 +11,6 @@
             <h3 class="counter text-2xl font-bold text-gray-800 mt-1" data-target="1240">0</h3>
         </div>
     </div>
-
-    <!-- Hadir -->
     <div class="gsap-card opacity-0 translate-y-10 bg-white p-6 rounded-2xl shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07),0_10px_20px_-2px_rgba(0,0,0,0.04)] border border-gray-100 flex items-center transition-transform hover:-translate-y-1 duration-300">
         <div class="p-4 rounded-xl bg-emerald-50 text-emerald-600 mr-4">
             <i data-lucide="user-check" class="w-6 h-6"></i>
@@ -27,8 +23,6 @@
             </div>
         </div>
     </div>
-
-    <!-- Izin -->
     <div class="gsap-card opacity-0 translate-y-10 bg-white p-6 rounded-2xl shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07),0_10px_20px_-2px_rgba(0,0,0,0.04)] border border-gray-100 flex items-center transition-transform hover:-translate-y-1 duration-300">
         <div class="p-4 rounded-xl bg-orange-50 text-orange-600 mr-4">
             <i data-lucide="clipboard" class="w-6 h-6"></i>
@@ -38,8 +32,6 @@
             <h3 class="counter text-2xl font-bold text-gray-800 mt-1" data-target="45">0</h3>
         </div>
     </div>
-
-    <!-- Alpha -->
     <div class="gsap-card opacity-0 translate-y-10 bg-white p-6 rounded-2xl shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07),0_10px_20px_-2px_rgba(0,0,0,0.04)] border border-gray-100 flex items-center transition-transform hover:-translate-y-1 duration-300">
         <div class="p-4 rounded-xl bg-red-50 text-red-600 mr-4">
             <i data-lucide="alert-circle" class="w-6 h-6"></i>
@@ -50,7 +42,6 @@
         </div>
     </div>
 </div>
-
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 

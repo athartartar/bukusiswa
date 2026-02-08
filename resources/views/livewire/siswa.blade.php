@@ -109,36 +109,36 @@
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-50">
-                    <template x-for="user in paginatedUsers" :key="user.id">
+                    <template x-for="student in paginatedStudents" :key="student.id">
                         <tr class="group hover:bg-blue-50/30 transition-colors duration-200">
                             <td class="px-6 py-4 font-mono text-sm text-gray-600">
                                 <span class="bg-gray-100 px-2 py-1 rounded text-xs whitespace-nowrap"
-                                    x-text="user.nis"></span>
+                                    x-text="student.nis"></span>
                             </td>
                             <td class="px-6 py-4">
                                 <span class="font-bold text-gray-800 text-sm sm:text-base whitespace-nowrap"
-                                    x-text="user.name"></span>
+                                    x-text="student.name"></span>
                             </td>
                             <td class="px-6 py-4">
                                 <span
                                     class="inline-flex items-center px-2.5 py-0.5 rounded-lg text-xs font-medium bg-indigo-50 text-indigo-700 border border-indigo-100 whitespace-nowrap"
-                                    x-text="user.class"></span>
+                                    x-text="student.class"></span>
                             </td>
                             <td class="px-6 py-4 text-center">
                                 <span
                                     class="inline-flex items-center justify-center w-8 h-8 rounded-full text-xs font-bold ring-2 ring-white shadow-sm"
-                                    :class="user.gender === 'L' ? 'bg-blue-100 text-blue-700' :
+                                    :class="student.gender === 'L' ? 'bg-blue-100 text-blue-700' :
                                         'bg-pink-100 text-pink-700'"
-                                    x-text="user.gender"></span>
+                                    x-text="student.gender"></span>
                             </td>
                             <td class="px-6 py-4 text-right">
                                 <div class="flex justify-end gap-2">
-                                    <button @click="openDrawer('edit', user)"
+                                    <button @click="openDrawer('edit', student)"
                                         class="p-2 text-[#37517e] bg-white hover:bg-[#37517e] hover:text-white rounded-lg border border-gray-200 shadow-sm transition-all"
                                         title="Edit">
                                         <i data-lucide="edit-3" class="w-4 h-4"></i>
                                     </button>
-                                    <button @click="openDrawer('delete', user)"
+                                    <button @click="openDrawer('delete', student)"
                                         class="p-2 text-red-600 bg-white hover:bg-red-600 hover:text-white rounded-lg border border-gray-200 shadow-sm transition-all"
                                         title="Hapus">
                                         <i data-lucide="trash-2" class="w-4 h-4"></i>

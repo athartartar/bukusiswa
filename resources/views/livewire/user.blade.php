@@ -366,10 +366,10 @@
                                 x-transition:leave="transition ease-in duration-150"
                                 x-transition:leave-start="transform opacity-100 translate-y-0"
                                 x-transition:leave-end="transform opacity-0 -translate-y-2"
-                                class="absolute z-50 -mt-[2px] w-full bg-white shadow-[0_10px_20px_-5px_rgba(0,0,0,0.1)] rounded-b-xl border border-t-0 border-[#37517e] overflow-hidden max-h-56 overflow-y-auto"
+                                class="absolute z-50 -mt-[2px] w-full bg-white shadow-[0_10px_20px_-5px_rgba(0,0,0,0.1)] rounded-b-xl border border-t-0 border-[#37517e] overflow-hidden max-h-56 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
                                 style="display: none;">
 
-                                <ul class="py-1">
+                                <ul class="py-1 ">
                                     <template x-for="option in options" :key="option.value">
                                         <li @click="formData.usertype = option.value; open = false"
                                             class="cursor-pointer select-none relative py-2.5 pl-4 pr-9 text-sm hover:bg-indigo-50/80 transition-colors duration-150"

@@ -71,14 +71,6 @@
                         <span class="{{ Route::is('pelanggaran') ? 'font-bold' : 'font-medium' }}">Pelanggaran</span>
                     </a>
                 </nav>
-
-                {{-- <div class="p-4 border-t border-white/10 mb-2">
-                    <button id="logoutButton"
-                        class="flex w-full items-center px-4 py-3 text-red-300 hover:bg-red-500/25 hover:text-red-200 rounded-lg transition-colors">
-                        <i data-lucide="log-out" class="w-5 h-5 mr-3"></i>
-                        <span class="font-medium">Logout</span>
-                    </button>
-                </div> --}}
             </div>
         </aside>
 

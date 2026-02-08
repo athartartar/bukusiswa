@@ -1,10 +1,213 @@
-<div x-data='siswaData(
-    @json($students),
-    "{{ route('siswa.store') }}",
+<script>
+    document.addEventListener("alpine:init", () => {
+        // 1. Definisikan Style Toaster SweetAlert (Sama persis)
+        const Toast = Swal.mixin({
+            toast: true,
+            position: "top-end",
+            showConfirmButton: false,
+            timer: 1000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.addEventListener("mouseenter", Swal.stopTimer);
+                toast.addEventListener("mouseleave", Swal.resumeTimer);
+            },
+        });
+
+        // 2. Definisikan Component Alpine 'guruData'
+        Alpine.data("guruData", (initialGurus, routeStore, csrfToken) => ({
+            search: "",
+            rowsPerPage: 5,
+            currentPage: 1,
+            drawerOpen: false,
+            drawerMode: "add",
+            sortCol: "name",
+            sortAsc: true,
+            isLoading: false,
+            // Field disesuaikan: nik, kodeguru, status
+            formData: {
+                id: null,
+                name: "",
+                nik: "",
+                kodeguru: "",
+                status: "Aktif"
+            },
+
+            // Ambil data dari parameter blade
+            gurus: initialGurus,
+
+            get filteredGurus() {
+                let result = this.gurus;
+                if (this.search !== "") {
+                    const q = this.search.toLowerCase();
+                    result = result.filter(
+                        (g) =>
+                        g.name.toLowerCase().includes(q) ||
+                        g.nik.includes(q) ||
+                        g.kodeguru.toLowerCase().includes(q)
+                    );
+                }
+                result = result.sort((a, b) => {
+                    let valA = a[this.sortCol].toString().toLowerCase();
+                    let valB = b[this.sortCol].toString().toLowerCase();
+                    if (valA < valB) return this.sortAsc ? -1 : 1;
+                    if (valA > valB) return this.sortAsc ? 1 : -1;
+                    return 0;
+                });
+                return result;
+            },
+            get totalPages() {
+                return Math.ceil(this.filteredGurus.length / this.rowsPerPage);
+            },
+            get paginatedGurus() {
+                let start = (this.currentPage - 1) * this.rowsPerPage;
+                return this.filteredGurus.slice(start, start + this.rowsPerPage);
+            },
+            get pageNumbers() {
+                let pages = [];
+                let total = this.totalPages;
+                let current = this.currentPage;
+                if (total <= 7) {
+                    for (let i = 1; i <= total; i++) pages.push(i);
+                } else {
+                    if (current <= 4) {
+                        pages = [1, 2, 3, 4, 5, "...", total];
+                    } else if (current >= total - 3) {
+                        pages = [1, "...", total - 4, total - 3, total - 2, total - 1, total];
+                    } else {
+                        pages = [1, "...", current - 1, current, current + 1, "...", total];
+                    }
+                }
+                return pages;
+            },
+            get drawerTitle() {
+                if (this.drawerMode === "add") return "Tambah Guru Baru";
+                if (this.drawerMode === "edit") return "Edit Data Guru";
+                return "Konfirmasi Hapus";
+            },
+            get drawerDescription() {
+                if (this.drawerMode === "add")
+                    return "Silakan lengkapi formulir di bawah ini.";
+                if (this.drawerMode === "edit")
+                    return "Lakukan perubahan pada data guru.";
+                return "Tindakan ini akan menghapus data guru secara permanen.";
+            },
+            sortBy(col) {
+                if (this.sortCol === col) {
+                    this.sortAsc = !this.sortAsc;
+                } else {
+                    this.sortCol = col;
+                    this.sortAsc = true;
+                }
+            },
+            openDrawer(mode, guru = null) {
+                this.drawerMode = mode;
+                if (mode === "add") {
+                    this.formData = {
+                        id: null,
+                        name: "",
+                        nik: "",
+                        kodeguru: "",
+                        status: "Aktif",
+                    };
+                } else {
+                    // Spread operator untuk copy data guru ke form
+                    this.formData = {
+                        ...guru
+                    };
+                }
+                this.drawerOpen = true;
+            },
+            updateRows() {
+                this.currentPage = 1;
+            },
+
+            // --- SAVE DATA ---
+            async saveData() {
+                this.isLoading = true;
+                try {
+                    let response = await fetch(routeStore, {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "X-CSRF-TOKEN": csrfToken,
+                        },
+                        body: JSON.stringify(this.formData),
+                    });
+
+                    let result = await response.json();
+                    if (!response.ok)
+                        throw new Error(result.message || "Gagal menyimpan data");
+
+                    this.drawerOpen = false;
+                    Toast.fire({
+                        icon: "success",
+                        title: "Berhasil disimpan",
+                    }).then(() => {
+                        location.reload();
+                    });
+                } catch (error) {
+                    Toast.fire({
+                        icon: "error",
+                        title: "Gagal menyimpan data",
+                    });
+                } finally {
+                    this.isLoading = false;
+                }
+            },
+
+            // --- DELETE DATA ---
+            async deleteData() {
+                this.isLoading = true;
+                try {
+                    // Endpoint delete disesuaikan ke /guru/
+                    let response = await fetch("/guru/" + this.formData.id, {
+                        method: "DELETE",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "X-CSRF-TOKEN": csrfToken,
+                        },
+                    });
+                    if (!response.ok) throw new Error("Gagal menghapus data");
+                    this.drawerOpen = false;
+                    Toast.fire({
+                        icon: "success",
+                        title: "Data dihapus",
+                    }).then(() => {
+                        location.reload();
+                    });
+                } catch (error) {
+                    Toast.fire({
+                        icon: "error",
+                        title: "Gagal menghapus data",
+                    });
+                } finally {
+                    this.isLoading = false;
+                }
+            },
+
+            init() {
+                this.$watch("paginatedGurus", () => {
+                    setTimeout(() => lucide.createIcons(), 50);
+                });
+                this.$watch("drawerOpen", () => {
+                    setTimeout(() => lucide.createIcons(), 50);
+                });
+            },
+        }));
+    });
+</script>
+
+{{-- Masukkan Data dari Controller ke Alpine --}}
+<div x-data='guruData(
+    @json($gurus),
+    "{{ route('guru.store') }}",
     "{{ csrf_token() }}"
 )'
     class="w-full max-w-7xl mx-auto font-sans text-gray-800">
-    <x-slot name="header">Manajemen Data Siswa</x-slot>
+
+    <x-slot name="header">Manajemen Data Guru</x-slot>
+
+    {{-- HEADER & SEARCH --}}
     <div class="flex flex-col md:flex-row justify-between items-stretch md:items-center gap-4 mb-6">
         <div class="gsap-card opacity-0 translate-y-10 w-full md:w-80 relative group">
             <div
@@ -13,10 +216,11 @@
             </div>
             <input type="text" x-model="search"
                 class="block w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-xl leading-5 bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#37517e]/20 focus:border-[#37517e] text-sm shadow-sm transition-all"
-                placeholder="Cari Nama, NIS...">
+                placeholder="Cari Nama, NIK, Kode...">
         </div>
 
         <div class="grid grid-cols-2 md:flex md:items-center gap-3 w-full md:w-auto">
+            {{-- ROWS PER PAGE DROPDOWN --}}
             <div x-data="{
                 open: false,
                 options: [5, 10, 25, 50]
@@ -29,7 +233,6 @@
                         'rounded-xl border-gray-200 group-hover:border-[#37517e]/50'">
                     <span x-text="rowsPerPage + ' Baris'" class="block truncate font-medium text-gray-700">
                     </span>
-
                     <span
                         class="absolute inset-y-0 right-0 flex flex-col justify-center pr-3 pointer-events-none text-gray-500">
                         <i data-lucide="chevron-down" class="w-4 h-4 transition-transform duration-300 ease-in-out"
@@ -51,9 +254,7 @@
                             <li @click="rowsPerPage = option; updateRows(); open = false"
                                 class="cursor-pointer select-none relative py-2.5 pl-4 pr-9 text-sm hover:bg-indigo-50/80 transition-colors duration-150"
                                 :class="rowsPerPage === option ? 'bg-indigo-50 text-[#37517e] font-semibold' : 'text-gray-700'">
-
                                 <span x-text="option + ' Baris'" class="block truncate"></span>
-
                                 <span x-show="rowsPerPage === option"
                                     class="absolute inset-y-0 right-0 flex items-center pr-3 text-[#37517e]">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
@@ -76,6 +277,7 @@
         </div>
     </div>
 
+    {{-- TABLE --}}
     <div
         class="gsap-card opacity-0 translate-y-10 bg-white rounded-2xl shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07),0_10px_20px_-2px_rgba(0,0,0,0.04)] border border-gray-100 overflow-hidden flex flex-col">
         <div class="overflow-x-auto custom-scrollbar">
@@ -84,61 +286,65 @@
                     <tr
                         class="bg-gray-50/50 border-b border-gray-100 text-xs uppercase text-gray-500 font-semibold tracking-wider">
                         <th class="px-6 py-4 sm:py-5 cursor-pointer hover:bg-gray-100 transition select-none group w-32"
-                            @click="sortBy('nis')">
-                            <div class="flex items-center gap-2">NIS
+                            @click="sortBy('nik')">
+                            <div class="flex items-center gap-2">NIK
                                 <i data-lucide="arrow-up-down"
                                     class="w-3 h-3 text-gray-300 group-hover:text-gray-500"></i>
                             </div>
                         </th>
                         <th class="px-6 py-4 sm:py-5 cursor-pointer hover:bg-gray-100 transition select-none group"
                             @click="sortBy('name')">
-                            <div class="flex items-center gap-2">Nama Lengkap
+                            <div class="flex items-center gap-2">Nama Guru
                                 <i data-lucide="arrow-up-down"
                                     class="w-3 h-3 text-gray-300 group-hover:text-gray-500"></i>
                             </div>
                         </th>
                         <th class="px-6 py-4 sm:py-5 cursor-pointer hover:bg-gray-100 transition select-none group"
-                            @click="sortBy('class')">
-                            <div class="flex items-center gap-2">Kelas
+                            @click="sortBy('kodeguru')">
+                            <div class="flex items-center gap-2">Kode Guru
                                 <i data-lucide="arrow-up-down"
                                     class="w-3 h-3 text-gray-300 group-hover:text-gray-500"></i>
                             </div>
                         </th>
-                        <th class="px-6 py-4 sm:py-5 text-center w-16">L/P</th>
+                        <th class="px-6 py-4 sm:py-5 text-center w-32">Status</th>
                         <th class="px-6 py-4 sm:py-5 text-right w-32">Opsi</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-50">
-                    <template x-for="student in paginatedStudents" :key="student.id">
+                    <template x-for="guru in paginatedGurus" :key="guru.id">
                         <tr class="group hover:bg-blue-50/30 transition-colors duration-200">
+                            {{-- NIK --}}
                             <td class="px-6 py-4 font-mono text-sm text-gray-600">
                                 <span class="bg-gray-100 px-2 py-1 rounded text-xs whitespace-nowrap"
-                                    x-text="student.nis"></span>
+                                    x-text="guru.nik"></span>
                             </td>
+                            {{-- NAMA --}}
                             <td class="px-6 py-4">
                                 <span class="font-bold text-gray-800 text-sm sm:text-base whitespace-nowrap"
-                                    x-text="student.name"></span>
+                                    x-text="guru.name"></span>
                             </td>
+                            {{-- KODE GURU --}}
                             <td class="px-6 py-4">
                                 <span
                                     class="inline-flex items-center px-2.5 py-0.5 rounded-lg text-xs font-medium bg-indigo-50 text-indigo-700 border border-indigo-100 whitespace-nowrap"
-                                    x-text="student.class"></span>
+                                    x-text="guru.kodeguru"></span>
                             </td>
+                            {{-- STATUS --}}
                             <td class="px-6 py-4 text-center">
-                                <span
-                                    class="inline-flex items-center justify-center w-8 h-8 rounded-full text-xs font-bold ring-2 ring-white shadow-sm"
-                                    :class="student.gender === 'L' ? 'bg-blue-100 text-blue-700' :
-                                        'bg-pink-100 text-pink-700'"
-                                    x-text="student.gender"></span>
+                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold"
+                                    :class="guru.status === 'Aktif' ? 'bg-green-100 text-green-700' :
+                                        'bg-red-100 text-red-700'"
+                                    x-text="guru.status"></span>
                             </td>
+                            {{-- OPSI --}}
                             <td class="px-6 py-4 text-right">
                                 <div class="flex justify-end gap-2">
-                                    <button @click="openDrawer('edit', student)"
+                                    <button @click="openDrawer('edit', guru)"
                                         class="p-2 text-[#37517e] bg-white hover:bg-[#37517e] hover:text-white rounded-lg border border-gray-200 shadow-sm transition-all"
                                         title="Edit">
                                         <i data-lucide="edit-3" class="w-4 h-4"></i>
                                     </button>
-                                    <button @click="openDrawer('delete', student)"
+                                    <button @click="openDrawer('delete', guru)"
                                         class="p-2 text-red-600 bg-white hover:bg-red-600 hover:text-white rounded-lg border border-gray-200 shadow-sm transition-all"
                                         title="Hapus">
                                         <i data-lucide="trash-2" class="w-4 h-4"></i>
@@ -147,7 +353,7 @@
                             </td>
                         </tr>
                     </template>
-                    <template x-if="paginatedStudents.length === 0">
+                    <template x-if="paginatedGurus.length === 0">
                         <tr>
                             <td colspan="5" class="px-6 py-12 text-center">
                                 <div class="flex flex-col items-center justify-center">
@@ -166,11 +372,12 @@
             </table>
         </div>
 
+        {{-- PAGINATION --}}
         <div
             class="px-6 py-4 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-4 bg-gray-50/50">
             <span class="text-xs sm:text-sm text-gray-500 order-2 sm:order-1">
-                Menampilkan <b x-text="paginatedStudents.length"></b> dari <span
-                    x-text="filteredStudents.length"></span> siswa
+                Menampilkan <b x-text="paginatedGurus.length"></b> dari <span x-text="filteredGurus.length"></span>
+                guru
             </span>
 
             <div class="flex items-center gap-1 order-1 sm:order-2 w-full sm:w-auto justify-center"
@@ -200,6 +407,7 @@
         </div>
     </div>
 
+    {{-- DRAWER (SIDEBAR FORM) --}}
     <div x-show="drawerOpen" class="relative z-50" style="z-index: 100; display: none;">
         <div x-show="drawerOpen" @click="drawerOpen = false"
             class="fixed inset-0 bg-[#37517e]/20 backdrop-blur-sm transition-opacity"></div>
@@ -211,6 +419,7 @@
             x-transition:leave="transition transform ease-in duration-200" x-transition:leave-start="translate-x-0"
             x-transition:leave-end="translate-x-full">
 
+            {{-- DRAWER HEADER --}}
             <div class="px-6 py-5 border-b border-gray-100 flex items-start justify-between"
                 :class="drawerMode === 'delete' ? 'bg-red-50' : 'bg-gray-50/50'">
                 <div class="pr-4">
@@ -225,7 +434,9 @@
                 </button>
             </div>
 
+            {{-- DRAWER BODY --}}
             <div class="flex-1 overflow-y-auto p-6 space-y-6">
+                {{-- ALERT DELETE --}}
                 <div x-show="drawerMode === 'delete'"
                     class="bg-red-50 border border-red-100 rounded-xl p-4 flex gap-3 items-start">
                     <div class="p-2 bg-red-100 rounded-full shrink-0">
@@ -233,145 +444,78 @@
                     </div>
                     <div>
                         <h4 class="font-bold text-red-800 text-sm">Peringatan Penting!</h4>
-                        <p class="text-sm text-red-700 mt-1">Anda akan menghapus data atas nama <b
+                        <p class="text-sm text-red-700 mt-1">Anda akan menghapus data guru <b
                                 x-text="formData.name"></b>. Pastikan ini adalah tindakan yang benar.</p>
                     </div>
                 </div>
 
+                {{-- FORM INPUTS --}}
                 <div class="space-y-5" :class="drawerMode === 'delete' ? 'opacity-50 pointer-events-none' : ''">
+
+                    {{-- INPUT NIK --}}
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1.5">Nomor Induk Siswa (NIS)</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-1.5">Nomor Induk Karyawan
+                            (NIK)</label>
                         <div class="relative">
-                            <input type="number" x-model="formData.nis" placeholder="Contoh: 20231001"
+                            <input type="text" x-model="formData.nik" placeholder="Contoh: 19900101..."
                                 class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 focus:border-[#37517e] focus:ring-2 focus:ring-[#37517e]/20 outline-none transition-all placeholder:text-gray-400">
                             <div class="absolute inset-y-0 left-3 flex items-center pointer-events-none text-gray-400">
                                 <i data-lucide="hash" class="w-4 h-4"></i>
                             </div>
                         </div>
                     </div>
+
+                    {{-- INPUT NAMA --}}
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1.5">Nama Lengkap</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-1.5">Nama Guru</label>
                         <div class="relative">
                             <input type="text" x-model="formData.name"
                                 @input="formData.name = formData.name.replace(/\b\w/g, l => l.toUpperCase())"
-                                placeholder="Masukkan nama lengkap siswa"
+                                placeholder="Masukkan nama lengkap guru"
                                 class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 focus:border-[#37517e] focus:ring-2 focus:ring-[#37517e]/20 outline-none transition-all placeholder:text-gray-400">
                             <div class="absolute inset-y-0 left-3 flex items-center pointer-events-none text-gray-400">
                                 <i data-lucide="user" class="w-4 h-4"></i>
                             </div>
                         </div>
                     </div>
+
                     <div class="grid grid-cols-2 gap-4">
-                        <div x-data="{
-                            open: false,
-                            search: '',
-                            options: ['X RPL 1', 'X TSM 1', 'X AKL 2', 'XI DKV 1', 'XI RPL 2', 'XI TKJ 1', 'XII RPL 1', 'XII TKJ 2', 'XII DKV 2', 'XII MM 1'],
-                            get filteredOptions() {
-                                if (this.search === '') return this.options;
-                                return this.options.filter(item => item.toLowerCase().includes(this.search.toLowerCase()));
-                            }
-                        }" class="relative group" @click.outside="open = false">
-
-                            <label class="block text-sm font-medium text-gray-700 mb-1.5">Kelas</label>
-
-                            <button type="button"
-                                @click="open = !open; if(open) $nextTick(() => $refs.searchInput.focus())"
-                                class="w-full pl-10 pr-10 py-2.5 text-left border bg-white focus:outline-none transition-all flex items-center justify-between relative z-10"
-                                :class="open ? 'rounded-t-xl border-[#37517e] ring-2 ring-[#37517e]/20 border-b-transparent' :
-                                    'rounded-xl border-gray-200 group-hover:border-[#37517e]/50'">
-                                <span x-text="formData.class ? formData.class : 'Pilih Kelas...'"
-                                    class="block truncate"
-                                    :class="formData.class ? 'text-gray-900' : 'text-gray-500'">
-                                </span>
-
-                                <span
-                                    class="absolute inset-y-0 right-0 flex flex-col justify-center pr-3 pointer-events-none text-gray-400">
-                                    <i data-lucide="chevron-down"
-                                        class="w-4 h-4 transition-transform duration-300 ease-in-out"
-                                        :class="open ? 'rotate-180' : ''"></i>
-                                </span>
-                            </button>
-
-                            <div
-                                class="absolute top-[38px] left-3 flex items-center pointer-events-none text-gray-400 z-20">
-                                <i data-lucide="graduation-cap" class="w-4 h-4"></i>
-                            </div>
-
-                            <div x-show="open" x-transition:enter="transition ease-out duration-200"
-                                x-transition:enter-start="transform opacity-0 -translate-y-2"
-                                x-transition:enter-end="transform opacity-100 translate-y-0"
-                                x-transition:leave="transition ease-in duration-150"
-                                x-transition:leave-start="transform opacity-100 translate-y-0"
-                                x-transition:leave-end="transform opacity-0 -translate-y-2"
-                                class="absolute z-20 -mt-[2px] w-full bg-white shadow-[0_10px_20px_-5px_rgba(0,0,0,0.1)] rounded-b-xl border border-t-0 border-[#37517e] overflow-hidden"
-                                style="display: none;">
-
-                                <div class="sticky top-0 z-30 bg-white p-2 border-b border-gray-100">
-                                    <div class="relative">
-                                        <input x-ref="searchInput" x-model="search" type="text"
-                                            class="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[#37517e] focus:ring-1 focus:ring-[#37517e] placeholder-gray-400 bg-gray-50/50"
-                                            placeholder="Cari kelas...">
-                                        <div
-                                            class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                            <i data-lucide="search" class="w-4 h-4 text-gray-400"></i>
-                                        </div>
-                                    </div>
+                        {{-- INPUT KODE GURU (Dulu Kelas) --}}
+                        {{-- Kita pakai text input biasa agar fleksibel --}}
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1.5">Kode Guru</label>
+                            <div class="relative">
+                                <input type="text" x-model="formData.kodeguru" placeholder="Ex: GR-01"
+                                    class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 focus:border-[#37517e] focus:ring-2 focus:ring-[#37517e]/20 outline-none transition-all placeholder:text-gray-400 uppercase">
+                                <div
+                                    class="absolute inset-y-0 left-3 flex items-center pointer-events-none text-gray-400">
+                                    <i data-lucide="tag" class="w-4 h-4"></i>
                                 </div>
-
-                                <ul class="py-1 max-h-56 overflow-auto"
-                                    style="scrollbar-width: none; -ms-overflow-style: none;">
-                                    <style>
-                                        ul::-webkit-scrollbar {
-                                            display: none;
-                                        }
-                                    </style> <template x-for="option in filteredOptions" :key="option">
-                                        <li @click="formData.class = option; open = false; search = ''"
-                                            class="cursor-pointer select-none relative py-2.5 pl-4 pr-9 text-sm hover:bg-indigo-50/80 transition-colors duration-150"
-                                            :class="formData.class === option ? 'bg-indigo-50 text-[#37517e] font-semibold' :
-                                                'text-gray-700'">
-
-                                            <span x-text="option" class="block truncate"></span>
-
-                                            <span x-show="formData.class === option"
-                                                class="absolute inset-y-0 right-0 flex items-center pr-3 text-[#37517e]">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
-                                                    viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                                    stroke-width="2.5" stroke-linecap="round"
-                                                    stroke-linejoin="round">
-                                                    <polyline points="20 6 9 17 4 12"></polyline>
-                                                </svg>
-                                            </span>
-                                        </li>
-                                    </template>
-
-                                    <div x-show="filteredOptions.length === 0"
-                                        class="px-4 py-6 text-sm text-gray-500 text-center flex flex-col items-center justify-center gap-2">
-                                        <i data-lucide="info" class="w-6 h-6 text-gray-300"></i>
-                                        <p>Kelas tidak ditemukan.</p>
-                                    </div>
-                                </ul>
                             </div>
                         </div>
+
+                        {{-- INPUT STATUS (Dulu Gender) --}}
                         <div x-data="{
                             open: false,
                             options: [
-                                { value: 'L', label: 'Laki-laki' },
-                                { value: 'P', label: 'Perempuan' }
+                                { value: 'Aktif', label: 'Aktif' },
+                                { value: 'Cuti', label: 'Cuti' },
+                                { value: 'Keluar', label: 'Keluar' }
                             ],
                             get currentLabel() {
-                                let selected = this.options.find(o => o.value === formData.gender);
-                                return selected ? selected.label : 'Pilih Gender...';
+                                let selected = this.options.find(o => o.value === formData.status);
+                                return selected ? selected.label : 'Pilih Status...';
                             }
                         }" class="relative group" @click.outside="open = false">
 
-                            <label class="block text-sm font-medium text-gray-700 mb-1.5">Gender</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1.5">Status</label>
 
                             <button type="button" @click="open = !open"
                                 class="w-full pl-10 pr-10 py-2.5 text-left border bg-white focus:outline-none transition-all flex items-center justify-between relative z-10"
                                 :class="open ? 'rounded-t-xl border-[#37517e] ring-2 ring-[#37517e]/20 border-b-transparent' :
                                     'rounded-xl border-gray-200 group-hover:border-[#37517e]/50'">
                                 <span x-text="currentLabel" class="block truncate"
-                                    :class="formData.gender ? 'text-gray-900' : 'text-gray-500'">
+                                    :class="formData.status ? 'text-gray-900' : 'text-gray-500'">
                                 </span>
 
                                 <span
@@ -384,7 +528,7 @@
 
                             <div
                                 class="absolute top-[38px] left-3 flex items-center pointer-events-none text-gray-400 z-20">
-                                <i data-lucide="users" class="w-4 h-4"></i>
+                                <i data-lucide="activity" class="w-4 h-4"></i>
                             </div>
 
                             <div x-show="open" x-transition:enter="transition ease-out duration-200"
@@ -398,14 +542,14 @@
 
                                 <ul class="py-1">
                                     <template x-for="option in options" :key="option.value">
-                                        <li @click="formData.gender = option.value; open = false"
+                                        <li @click="formData.status = option.value; open = false"
                                             class="cursor-pointer select-none relative py-2.5 pl-4 pr-9 text-sm hover:bg-indigo-50/80 transition-colors duration-150"
-                                            :class="formData.gender === option.value ?
+                                            :class="formData.status === option.value ?
                                                 'bg-indigo-50 text-[#37517e] font-semibold' : 'text-gray-700'">
 
                                             <span x-text="option.label" class="block truncate"></span>
 
-                                            <span x-show="formData.gender === option.value"
+                                            <span x-show="formData.status === option.value"
                                                 class="absolute inset-y-0 right-0 flex items-center pr-3 text-[#37517e]">
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
                                                     viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -423,6 +567,7 @@
                 </div>
             </div>
 
+            {{-- DRAWER FOOTER --}}
             <div class="px-6 py-5 border-t border-gray-100 bg-gray-50 flex gap-3">
                 <button @click="drawerOpen = false"
                     class="flex-1 px-4 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-xl font-medium hover:bg-gray-100 transition shadow-sm">

@@ -51,6 +51,16 @@
                         <span class="{{ Route::is('siswa') ? 'font-bold' : 'font-medium' }}">Data Siswa</span>
                     </a>
 
+                    <a href="/guru"
+                        class="flex items-center px-4 py-3 rounded-lg transition-colors
+                        {{ Route::is('guru') ? 'bg-white/90 text-[#37517e]' : 'text-gray-300 hover:bg-white/10 hover:text-white' }}">
+                        <i data-lucide="graduation-cap"
+                            class="w-5 h-5 mr-3 {{ Route::is('guru') ? 'fill-[#37517e]/20 stroke-[#37517e]' : '' }}"
+                            @if (Route::is('guru')) stroke-width="3" @endif>
+                        </i>
+                        <span class="{{ Route::is('guru') ? 'font-bold' : 'font-medium' }}">Data Guru</span>
+                    </a>
+
                     <a href="/pelanggaran"
                         class="flex items-center px-4 py-3 rounded-lg transition-colors
                         {{ Route::is('pelanggaran') ? 'bg-white/90 text-[#37517e]' : 'text-gray-300 hover:bg-white/10 hover:text-white' }}">
@@ -153,6 +163,25 @@
                     class="absolute bottom-2 text-[10px] font-bold text-[#37517e] transition-all duration-300 
                         {{ Request::routeIs('siswa') ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none' }}">
                     Siswa
+                </span>
+            </a>
+            <a href="/guru" class="relative flex flex-col items-center justify-center w-full h-full group">
+                @if (Request::routeIs('guru'))
+                    <span class="absolute top-2 w-1 h-1 bg-[#37517e] rounded-full shadow-sm"></span>
+                @endif
+
+                <div
+                    class="transition-all duration-300 ease-out {{ Request::routeIs('guru') ? '-translate-y-2' : '' }}">
+                    <i data-lucide="graduation-cap"
+                        class="w-6 h-6 transition-colors duration-300 
+                        {{ Request::routeIs('guru') ? 'text-[#37517e] fill-[#37517e]/20' : 'text-gray-400 group-hover:text-gray-600' }}">
+                    </i>
+                </div>
+
+                <span
+                    class="absolute bottom-2 text-[10px] font-bold text-[#37517e] transition-all duration-300 
+                        {{ Request::routeIs('guru') ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none' }}">
+                    Guru
                 </span>
             </a>
 

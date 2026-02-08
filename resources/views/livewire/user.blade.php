@@ -1,10 +1,10 @@
-<div x-data='siswaData(
-    @json($students),
-    "{{ route('siswa.store') }}",
+<div x-data='userData(
+    @json($users),
+    "{{ route('user.store') }}",
     "{{ csrf_token() }}"
 )'
     class="w-full max-w-7xl mx-auto font-sans text-gray-800">
-    <x-slot name="header">Manajemen Data Siswa</x-slot>
+    <x-slot name="header">Manajemen Data User</x-slot>
     <div class="flex flex-col md:flex-row justify-between items-stretch md:items-center gap-4 mb-6">
         <div class="gsap-card opacity-0 translate-y-10 w-full md:w-80 relative group">
             <div
@@ -84,8 +84,8 @@
                     <tr
                         class="bg-gray-50/50 border-b border-gray-100 text-xs uppercase text-gray-500 font-semibold tracking-wider">
                         <th class="px-6 py-4 sm:py-5 cursor-pointer hover:bg-gray-100 transition select-none group w-32"
-                            @click="sortBy('nis')">
-                            <div class="flex items-center gap-2">NIS
+                            @click="sortBy('username')">
+                            <div class="flex items-center gap-2">Username
                                 <i data-lucide="arrow-up-down"
                                     class="w-3 h-3 text-gray-300 group-hover:text-gray-500"></i>
                             </div>
@@ -99,38 +99,44 @@
                         </th>
                         <th class="px-6 py-4 sm:py-5 cursor-pointer hover:bg-gray-100 transition select-none group"
                             @click="sortBy('class')">
-                            <div class="flex items-center gap-2">Kelas
+                            <div class="flex items-center gap-2">User Type
                                 <i data-lucide="arrow-up-down"
                                     class="w-3 h-3 text-gray-300 group-hover:text-gray-500"></i>
                             </div>
                         </th>
-                        <th class="px-6 py-4 sm:py-5 text-center w-16">L/P</th>
+                        <th class="px-6 py-4 sm:py-5 text-center w-16">Status</th>
                         <th class="px-6 py-4 sm:py-5 text-right w-32">Opsi</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-50">
-                    <template x-for="user in paginatedUsers" :key="user.id">
+                    <template x-for="user in paginatedUsers" :key="user.id_user">
                         <tr class="group hover:bg-blue-50/30 transition-colors duration-200">
+
                             <td class="px-6 py-4 font-mono text-sm text-gray-600">
                                 <span class="bg-gray-100 px-2 py-1 rounded text-xs whitespace-nowrap"
-                                    x-text="user.nis"></span>
+                                    x-text="user.username"></span>
                             </td>
+
                             <td class="px-6 py-4">
                                 <span class="font-bold text-gray-800 text-sm sm:text-base whitespace-nowrap"
-                                    x-text="user.name"></span>
+                                    x-text="user.namalengkap"></span>
                             </td>
+
                             <td class="px-6 py-4">
                                 <span
                                     class="inline-flex items-center px-2.5 py-0.5 rounded-lg text-xs font-medium bg-indigo-50 text-indigo-700 border border-indigo-100 whitespace-nowrap"
-                                    x-text="user.class"></span>
+                                    x-text="user.usertype"></span>
                             </td>
+
                             <td class="px-6 py-4 text-center">
-                                <span
-                                    class="inline-flex items-center justify-center w-8 h-8 rounded-full text-xs font-bold ring-2 ring-white shadow-sm"
-                                    :class="user.gender === 'L' ? 'bg-blue-100 text-blue-700' :
-                                        'bg-pink-100 text-pink-700'"
-                                    x-text="user.gender"></span>
+                                <span class="px-3 py-1 rounded-lg text-xs font-bold"
+                                    :class="user.status === 'aktif' ?
+                                        'bg-green-100 text-green-700' :
+                                        'bg-red-100 text-red-700'"
+                                    x-text="user.status">
+                                </span>
                             </td>
+
                             <td class="px-6 py-4 text-right">
                                 <div class="flex justify-end gap-2">
                                     <button @click="openDrawer('edit', user)"
@@ -138,6 +144,7 @@
                                         title="Edit">
                                         <i data-lucide="edit-3" class="w-4 h-4"></i>
                                     </button>
+
                                     <button @click="openDrawer('delete', user)"
                                         class="p-2 text-red-600 bg-white hover:bg-red-600 hover:text-white rounded-lg border border-gray-200 shadow-sm transition-all"
                                         title="Hapus">
@@ -145,32 +152,35 @@
                                     </button>
                                 </div>
                             </td>
+
                         </tr>
                     </template>
-                    <template x-if="paginatedStudents.length === 0">
+
+                    <template x-if="paginatedUsers.length === 0">
                         <tr>
                             <td colspan="5" class="px-6 py-12 text-center">
                                 <div class="flex flex-col items-center justify-center">
                                     <div class="bg-gray-50 p-4 rounded-full mb-3">
                                         <i data-lucide="search-x" class="w-8 h-8 text-gray-400"></i>
                                     </div>
-                                    <h3 class="text-gray-900 font-medium">Data tidak ditemukan</h3>
-                                    <p class="text-gray-500 text-sm mt-1">Coba kata kunci lain atau tambahkan data
-                                        baru.
+                                    <h3 class="text-gray-900 font-medium">Data user tidak ditemukan</h3>
+                                    <p class="text-gray-500 text-sm mt-1">
+                                        Coba kata kunci lain atau tambahkan user baru.
                                     </p>
                                 </div>
                             </td>
                         </tr>
                     </template>
                 </tbody>
+
             </table>
         </div>
 
         <div
             class="px-6 py-4 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-4 bg-gray-50/50">
             <span class="text-xs sm:text-sm text-gray-500 order-2 sm:order-1">
-                Menampilkan <b x-text="paginatedStudents.length"></b> dari <span
-                    x-text="filteredStudents.length"></span> siswa
+                Menampilkan <b x-text="paginatedUsers.length"></b> dari <span
+                    x-text="filteredUsers.length"></span> user
             </span>
 
             <div class="flex items-center gap-1 order-1 sm:order-2 w-full sm:w-auto justify-center"

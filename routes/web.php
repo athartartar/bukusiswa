@@ -5,8 +5,10 @@ use App\Livewire\Auth\Login;
 use App\Livewire\Dashboard; // Import Class Dashboard Baru
 use App\Livewire\Siswa;
 use App\Livewire\Profile;
+use App\Livewire\User;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\SiswaController;
+use App\Http\Controllers\UserController;
 
 Route::get('/', function () {
     return redirect()->route('login');
@@ -23,6 +25,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/siswa/store', [SiswaController::class, 'store'])->name('siswa.store');
     Route::delete('/siswa/{id}', [SiswaController::class, 'destroy'])->name('siswa.destroy');
     Route::get('/profile', Profile::class)->name('profile');
+    Route::get('/user', User::class)->name('user');
+    Route::post('/user/store', [UserController::class, 'store'])->name('user.store');
+    Route::delete('/user/{id}', [UserController::class, 'destroy'])->name('user.destroy');
 
     // Route Logout (Wajib ada biar tombol di sidebar jalan)
     Route::post('/logout', function () {

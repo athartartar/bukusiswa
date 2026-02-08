@@ -285,7 +285,7 @@
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1.5">Username</label>
                         <div class="relative">
-                            <input type="text" x-model="formData.username" placeholder="Contoh: budi123"
+                            <input type="number" x-model="formData.username" placeholder="Contoh: budi123"
                                 class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 focus:border-[#37517e] focus:ring-2 focus:ring-[#37517e]/20 outline-none transition-all placeholder:text-gray-400">
                             <div class="absolute inset-y-0 left-3 flex items-center pointer-events-none text-gray-400">
                                 <i data-lucide="at-sign" class="w-4 h-4"></i>

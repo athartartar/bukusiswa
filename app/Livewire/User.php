@@ -12,7 +12,7 @@ class User extends Component
     public function render()
     {
         $users = UserModel::select(
-            'id_user as id',
+            'id_user', 
             'namalengkap',
             'username',
             'usertype',
@@ -20,8 +20,8 @@ class User extends Component
             'status',
             'created_at'
         )
-        ->orderBy('id_user','desc')
-        ->get();
+            ->orderBy('id_user', 'desc')
+            ->get();
 
         return view('livewire.user', [
             'users' => $users

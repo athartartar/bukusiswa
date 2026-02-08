@@ -61,6 +61,16 @@
                         <span class="{{ Route::is('guru') ? 'font-bold' : 'font-medium' }}">Data Guru</span>
                     </a>
 
+                    <a href="/user"
+                        class="flex items-center px-4 py-3 rounded-lg transition-colors
+                        {{ Route::is('user') ? 'bg-white/90 text-[#37517e]' : 'text-gray-300 hover:bg-white/10 hover:text-white' }}">
+                        <i data-lucide="book-user"
+                            class="w-5 h-5 mr-3 {{ Route::is('user') ? 'fill-[#37517e]/20 stroke-[#37517e]' : '' }}"
+                            @if (Route::is('user')) stroke-width="3" @endif>
+                        </i>
+                        <span class="{{ Route::is('user') ? 'font-bold' : 'font-medium' }}">Data User</span>
+                    </a>
+
                     <a href="/pelanggaran"
                         class="flex items-center px-4 py-3 rounded-lg transition-colors
                         {{ Route::is('pelanggaran') ? 'bg-white/90 text-[#37517e]' : 'text-gray-300 hover:bg-white/10 hover:text-white' }}">

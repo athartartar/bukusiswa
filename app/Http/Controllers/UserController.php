@@ -7,7 +7,6 @@ use Illuminate\Http\Request;
 
 class UserController extends Controller
 {
-    // SIMPAN / EDIT USER
     public function store(Request $request)
     {
         $request->validate([
@@ -26,13 +25,10 @@ class UserController extends Controller
             'status' => $request->status,
         ];
 
-        // password (opsional saat edit)
         if ($request->password) {
             $data['password'] = $request->password; 
-            // otomatis ke-hash karena di model sudah 'hashed'
         }
 
-        // upload foto (opsional)
         if ($request->hasFile('foto')) {
             $file = $request->file('foto');
             $path = $file->store('users', 'public');
@@ -49,7 +45,6 @@ class UserController extends Controller
         ]);
     }
 
-    // HAPUS USER
     public function destroy($id)
     {
         User::destroy($id);

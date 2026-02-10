@@ -8,7 +8,6 @@ use Illuminate\Support\Facades\Auth;
 
 class Dashboard extends Component
 {
-    // Kita set layoutnya ke components.layouts.app
     #[Layout('components.layouts.app')] 
     public function render()
     {

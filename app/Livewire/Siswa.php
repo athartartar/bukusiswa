@@ -4,7 +4,6 @@ namespace App\Livewire;
 
 use Livewire\Component;
 use Livewire\Attributes\Layout;
-// BAGIAN INI DIUBAH (Kasih alias 'SiswaModel')
 use App\Models\Siswa as SiswaModel;
 
 class Siswa extends Component
@@ -12,7 +11,6 @@ class Siswa extends Component
     #[Layout('components.layouts.app')]
     public function render()
     {
-        // Panggil pake nama alias tadi
         $students = SiswaModel::select(
             'id_siswa as id',
             'nis',

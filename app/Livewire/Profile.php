@@ -24,7 +24,6 @@ class Profile extends Component
     #[Rule('nullable|image|max:2048')]
     public $photo;
 
-    // Password
     public $current_password;
     public $password;
     public $password_confirmation;
@@ -39,7 +38,6 @@ class Profile extends Component
 
     public function verifyOldPassword()
     {
-        // Pastikan logic ini tidak mereset isEditMode
         $this->passwordVerified = false;
 
         if (empty($this->current_password)) {

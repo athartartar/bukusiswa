@@ -18,7 +18,7 @@ class Pelanggaran extends Component
     public $poin;
     public $keterangan;
     public $bukti_foto;
-    
+
     // User info
     public $usertype;
     public $currentSiswaId = null;
@@ -28,13 +28,13 @@ class Pelanggaran extends Component
         if (!Auth::check()) {
             return redirect('/login');
         }
-        
+
         $user = Auth::user();
         $this->usertype = $user->usertype ?? 'guest';
-        
+
         // Jika usertype siswa, ambil id_siswa mereka
         if ($this->usertype === 'siswa') {
-            $siswa = SiswaModel::where('id_user', $user->id)->first();
+            $siswa = SiswaModel::where('id_user', $user->id_user)->first();
             if ($siswa) {
                 $this->currentSiswaId = $siswa->id_siswa;
             }
@@ -70,18 +70,21 @@ class Pelanggaran extends Component
         ]);
     }
 
-public function render()
+    public function render()
     {
         $user = Auth::user();
-        $usertype = $user->usertype ?? 'guest';
-        
-        // 1. Logika untuk SISWA
+        // Membersihkan spasi dan memaksa huruf kecil agar validasi akurat
+        $usertype = strtolower(trim($user->usertype ?? 'guest'));
+
+        $data = [];
+        $students = [];
+
+        // 1. JIKA USER ADALAH SISWA
         if ($usertype === 'siswa') {
             // Cari data siswa berdasarkan ID User yang login
-            $siswa = SiswaModel::where('id_user', $user->id)->first();
-            
+            $siswa = SiswaModel::where('id_user', $user->id_user)->first();
+
             if ($siswa) {
-                // FIXED: Gunakan 'pelanggarans.id_siswa' agar tidak error Ambiguous
                 $data = PelanggaranModel::query()
                     ->select(
                         'pelanggarans.*',
@@ -89,7 +92,7 @@ public function render()
                         'siswas.kelas'
                     )
                     ->join('siswas', 'pelanggarans.id_siswa', '=', 'siswas.id_siswa')
-                    ->where('pelanggarans.id_siswa', $siswa->id_siswa) // <--- PENTING: Spesifik tabel
+                    ->where('pelanggarans.id_siswa', $siswa->id_siswa) // <--- PENTING: Filter ID Siswa
                     ->orderBy('id_pelanggaran', 'desc')
                     ->get();
 
@@ -104,12 +107,12 @@ public function render()
                     ]
                 ]);
             } else {
-                // User login sebagai siswa, tapi datanya tidak ada di tabel siswas
-                $students = collect([]);
+                // Jika akun tipe siswa tapi datanya belum ada di tabel 'siswas'
                 $data = collect([]);
+                $students = collect([]);
             }
-        } 
-        // 2. Logika untuk ADMIN / GURU
+        }
+        // 2. JIKA USER ADALAH ADMIN / GURU / WALAS
         else {
             $data = PelanggaranModel::join('siswas', 'pelanggarans.id_siswa', '=', 'siswas.id_siswa')
                 ->select(
@@ -123,7 +126,7 @@ public function render()
             $students = SiswaModel::select('id_siswa as id', 'namalengkap as name', 'kelas as class', 'nis')
                 ->orderBy('namalengkap')
                 ->get()
-                ->map(function($student) {
+                ->map(function ($student) {
                     $student->total_poin = PelanggaranModel::where('id_siswa', $student->id)->sum('poin');
                     return $student;
                 });

@@ -66,7 +66,7 @@ class PelanggaranController extends Controller
         // Jika usertype siswa, hanya bisa lihat riwayat dirinya sendiri
         if ($user && $user->usertype === 'siswa') {
             // Ambil siswa berdasarkan user
-            $siswa = Siswa::where('id_user', $user->id)->first();
+            $siswa = Siswa::where('id_user', $user->id_user)->first();
             
             // Jika bukan siswa ini, return kosong atau error
             if (!$siswa || $siswa->id_siswa != $id_siswa) {

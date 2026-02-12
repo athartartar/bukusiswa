@@ -18,5 +18,6 @@ class DatabaseSeeder extends Seeder
             SiswasTableSeeder::class,
         ]);
         $this->call(SiswasTableSeeder::class);
+        $this->call(PelanggaransTableSeeder::class);
     }
 }

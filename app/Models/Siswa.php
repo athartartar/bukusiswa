@@ -9,7 +9,6 @@ class Siswa extends Model
 {
     use HasFactory;
 
-    // Kasih tau Laravel primary key nya ini
     protected $primaryKey = 'id_siswa';
 
     protected $fillable = [

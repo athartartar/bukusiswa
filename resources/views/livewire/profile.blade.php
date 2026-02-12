@@ -223,10 +223,9 @@
         </div>
 
         @php
-            $score = Auth::user()->score_pelanggaran ?? 70;
+            $score = Auth::user()->score_pelanggaran ?? 7;
             $maxScore = 100;
 
-            // Logika Warna
             if ($score >= 75) {
                 $statusColor = 'text-red-600';
                 $statusText = 'BAHAYA';

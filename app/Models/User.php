@@ -9,7 +9,6 @@ class User extends Authenticatable
 {
     use Notifiable;
 
-    // PENTING: Kasih tahu Laravel primary key-nya beda
     protected $primaryKey = 'id_user';
 
     protected $fillable = [

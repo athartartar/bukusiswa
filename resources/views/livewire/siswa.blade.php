@@ -4,7 +4,9 @@
     "{{ csrf_token() }}"
 )'
     class="w-full max-w-7xl mx-auto font-sans text-gray-800">
+
     <x-slot name="header">Manajemen Data Siswa</x-slot>
+
     <div class="flex flex-col md:flex-row justify-between items-stretch md:items-center gap-4 mb-6">
         <div class="gsap-card opacity-0 translate-y-10 w-full md:w-80 relative group">
             <div
@@ -27,9 +29,7 @@
                     class="w-full md:w-36 pl-4 pr-10 py-2.5 text-left border bg-white focus:outline-none transition-all flex items-center justify-between relative z-10"
                     :class="open ? 'rounded-t-xl border-[#37517e] ring-2 ring-[#37517e]/20 border-b-transparent' :
                         'rounded-xl border-gray-200 group-hover:border-[#37517e]/50'">
-                    <span x-text="rowsPerPage + ' Baris'" class="block truncate font-medium text-gray-700">
-                    </span>
-
+                    <span x-text="rowsPerPage + ' Baris'" class="block truncate font-medium text-gray-700"></span>
                     <span
                         class="absolute inset-y-0 right-0 flex flex-col justify-center pr-3 pointer-events-none text-gray-500">
                         <i data-lucide="chevron-down" class="w-4 h-4 transition-transform duration-300 ease-in-out"
@@ -45,15 +45,12 @@
                     x-transition:leave-end="transform opacity-0 -translate-y-2"
                     class="absolute z-20 -mt-[2px] w-full bg-white shadow-[0_10px_20px_-5px_rgba(0,0,0,0.1)] rounded-b-xl border border-t-0 border-[#37517e] overflow-hidden"
                     style="display: none;">
-
                     <ul class="py-1">
                         <template x-for="option in options" :key="option">
                             <li @click="rowsPerPage = option; updateRows(); open = false"
                                 class="cursor-pointer select-none relative py-2.5 pl-4 pr-9 text-sm hover:bg-indigo-50/80 transition-colors duration-150"
                                 :class="rowsPerPage === option ? 'bg-indigo-50 text-[#37517e] font-semibold' : 'text-gray-700'">
-
                                 <span x-text="option + ' Baris'" class="block truncate"></span>
-
                                 <span x-show="rowsPerPage === option"
                                     class="absolute inset-y-0 right-0 flex items-center pr-3 text-[#37517e]">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
@@ -68,11 +65,217 @@
                 </div>
             </div>
 
-            <button @click="openDrawer('add')"
-                class="gsap-card opacity-0 translate-y-10 w-full md:w-auto flex items-center justify-center gap-2 bg-[#37517e] hover:bg-[#2a3f63] text-white px-4 sm:px-5 py-2.5 rounded-xl font-medium shadow-lg shadow-[#37517e]/20 transition-all hover:scale-[1.02] active:scale-95 text-sm sm:text-base">
-                <i data-lucide="plus-circle" class="w-5 h-5"></i>
-                <span>Tambah</span>
-            </button>
+            <div x-data="{
+                previewOpen: false,
+                previewData: [],
+                isImporting: false,
+                handleFileUpload(e) {
+                    let file = e.target.files[0];
+                    if (!file) return;
+            
+                    this.isImporting = true;
+                    let formData = new FormData();
+                    formData.append('file', file);
+            
+                    fetch('{{ route('siswa.preview') }}', {
+                            method: 'POST',
+                            body: formData,
+                            headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' }
+                        })
+                        .then(res => res.json())
+                        .then(data => {
+                            this.isImporting = false;
+                            if (data.success) {
+                                this.previewData = data.data;
+                                this.previewOpen = true;
+                                e.target.value = '';
+                            } else {
+                                alert(data.error);
+                            }
+                        })
+                        .catch(err => {
+                            this.isImporting = false;
+                            alert('Terjadi kesalahan saat membaca file.');
+                        });
+                },
+                confirmImport() {
+                    this.isLoading = true;
+                    fetch('{{ route('siswa.storeBatch') }}', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                            },
+                            body: JSON.stringify({ data: this.previewData })
+                        })
+                        .then(res => res.json())
+                        .then(data => {
+                            this.isLoading = false;
+                            if (data.success) {
+                                alert(data.success);
+                                window.location.reload();
+                            } else {
+                                alert(data.error);
+                            }
+                        })
+                        .catch(err => {
+                            this.isLoading = false;
+                            alert('Gagal menyimpan data batch.');
+                        });
+                }
+            }" class="relative group w-full md:w-auto z-20" @click.outside="open = false">
+
+                <div x-data="{ open: false }" class="relative group w-full md:w-auto z-20" @click.outside="open = false">
+                    <button @click="open = !open"
+                        class="gsap-card opacity-0 translate-y-10 w-full md:w-auto flex items-center justify-center gap-2 bg-[#37517e] hover:bg-[#2a3f63] text-white px-4 sm:px-5 py-2.5 rounded-xl font-medium shadow-lg shadow-[#37517e]/20 transition-all hover:scale-[1.02] active:scale-95 text-sm sm:text-base">
+                        <i data-lucide="plus-circle" class="w-5 h-5"></i>
+                        <span>Kelola Data</span>
+                        <i data-lucide="chevron-down" class="w-4 h-4 ml-1 transition-transform"
+                            :class="open ? 'rotate-180' : ''"></i>
+                    </button>
+
+                    <div x-show="open" x-transition:enter="transition ease-out duration-200"
+                        x-transition:enter-start="transform opacity-0 -translate-y-2"
+                        x-transition:enter-end="transform opacity-100 translate-y-0"
+                        x-transition:leave="transition ease-in duration-150"
+                        x-transition:leave-start="transform opacity-100 translate-y-0"
+                        x-transition:leave-end="transform opacity-0 -translate-y-2"
+                        class="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-50"
+                        style="display: none;">
+                        <button @click="openDrawer('add'); open = false"
+                            class="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-indigo-50 flex items-center gap-2 transition-colors">
+                            <i data-lucide="user-plus" class="w-4 h-4 text-[#37517e]"></i>
+                            Tambah Manual
+                        </button>
+
+                        <a href="{{ route('siswa.template') }}"
+                            class="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-indigo-50 flex items-center gap-2 transition-colors">
+                            <i data-lucide="file-spreadsheet" class="w-4 h-4 text-green-600"></i>
+                            Download Template
+                        </a>
+
+                        <div class="relative border-t border-gray-100">
+                            <input type="file" accept=".xlsx, .xls, .csv" @change="handleFileUpload"
+                                class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10">
+                            <button
+                                class="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-indigo-50 flex items-center gap-2 transition-colors">
+                                <i x-show="!isImporting" data-lucide="upload" class="w-4 h-4 text-blue-600"></i>
+                                <svg x-show="isImporting" class="animate-spin h-4 w-4 text-blue-600"
+                                    xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10"
+                                        stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor"
+                                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                                    </path>
+                                </svg>
+                                <span x-text="isImporting ? 'Memproses...' : 'Import Excel'"></span>
+                            </button>
+                        </div>
+
+                        <a href="{{ route('siswa.export') }}" @click="open = false"
+                            class="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-indigo-50 flex items-center gap-2 transition-colors border-t border-gray-100">
+                            <i data-lucide="download" class="w-4 h-4 text-orange-600"></i>
+                            Export Semua Data
+                        </a>
+                    </div>
+                </div>
+                <template x-teleport="body">
+                    <div x-show="previewOpen" class="relative" style="z-index: 100; display: none;">
+                        <div x-show="previewOpen" @click="previewOpen = false"
+                            class="fixed inset-0 bg-[#37517e]/40 backdrop-blur-sm transition-opacity"></div>
+
+                        <div x-show="previewOpen"
+                            class="fixed inset-y-0 right-0 w-full sm:w-[600px] bg-white shadow-2xl flex flex-col h-full border-l border-gray-100"
+                            x-transition:enter="transition transform ease-out duration-300"
+                            x-transition:enter-start="translate-x-full" x-transition:enter-end="translate-x-0"
+                            x-transition:leave="transition transform ease-in duration-200"
+                            x-transition:leave-start="translate-x-0" x-transition:leave-end="translate-x-full">
+
+                            <div
+                                class="px-6 py-5 border-b border-gray-100 flex items-start justify-between bg-green-50/50">
+                                <div>
+                                    <h2 class="text-xl font-bold text-green-700">Preview Import Data</h2>
+                                    <p class="text-sm text-gray-500 mt-1">Pastikan data di bawah ini benar sebelum
+                                        disimpan.</p>
+                                </div>
+                                <button @click="previewOpen = false"
+                                    class="p-2 text-gray-400 hover:text-red-500 transition hover:bg-red-50 rounded-lg shrink-0">
+                                    <i data-lucide="x" class="w-5 h-5"></i>
+                                </button>
+                            </div>
+
+                            <div class="flex-1 overflow-y-auto p-0">
+                                <table class="w-full text-left border-collapse">
+                                    <thead class="bg-gray-50 sticky top-0 z-10 shadow-sm">
+                                        <tr>
+                                            <th
+                                                class="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                                NIS</th>
+                                            <th
+                                                class="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                                Nama</th>
+                                            <th
+                                                class="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                                Kelas</th>
+                                            <th
+                                                class="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                                L/P</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-gray-100">
+                                        <template x-for="(row, index) in previewData" :key="index">
+                                            <tr class="hover:bg-gray-50">
+                                                <td class="px-4 py-3 text-sm font-mono text-gray-600"
+                                                    x-text="row.nis">
+                                                </td>
+                                                <td class="px-4 py-3 text-sm text-gray-800 font-medium"
+                                                    x-text="row.namalengkap"></td>
+                                                <td class="px-4 py-3 text-sm text-gray-600">
+                                                    <span
+                                                        class="bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded text-xs"
+                                                        x-text="row.kelas"></span>
+                                                </td>
+                                                <td class="px-4 py-3 text-sm text-center">
+                                                    <span class="font-bold"
+                                                        :class="row.jeniskelamin === 'L' ? 'text-blue-600' :
+                                                            'text-pink-600'"
+                                                        x-text="row.jeniskelamin"></span>
+                                                </td>
+                                            </tr>
+                                        </template>
+                                    </tbody>
+                                </table>
+
+                                <div x-show="previewData.length === 0" class="p-8 text-center text-gray-500">
+                                    Tidak ada data yang terbaca.
+                                </div>
+                            </div>
+
+                            <div class="px-6 py-5 border-t border-gray-100 bg-gray-50 flex gap-3">
+                                <button @click="previewOpen = false"
+                                    class="flex-1 px-4 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-xl font-medium hover:bg-gray-100 transition shadow-sm">
+                                    Batal
+                                </button>
+
+                                <button @click="confirmImport()" :disabled="isLoading || previewData.length === 0"
+                                    class="flex-[2] px-4 py-2.5 bg-green-600 text-white rounded-xl font-medium hover:bg-green-700 shadow-lg shadow-green-600/20 transition flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                                    <i x-show="!isLoading" data-lucide="check-circle" class="w-4 h-4"></i>
+                                    <svg x-show="isLoading" class="animate-spin h-4 w-4 text-white"
+                                        xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10"
+                                            stroke="currentColor" stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor"
+                                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                                        </path>
+                                    </svg>
+                                    <span
+                                        x-text="isLoading ? 'Menyimpan...' : 'Simpan (' + previewData.length + ') Data'"></span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+            </div>
         </div>
     </div>
 
@@ -156,8 +359,7 @@
                                     </div>
                                     <h3 class="text-gray-900 font-medium">Data tidak ditemukan</h3>
                                     <p class="text-gray-500 text-sm mt-1">Coba kata kunci lain atau tambahkan data
-                                        baru.
-                                    </p>
+                                        baru.</p>
                                 </div>
                             </td>
                         </tr>
@@ -183,16 +385,16 @@
                 <template x-for="page in pageNumbers">
                     <button @click="typeof page === 'number' ? currentPage = page : null"
                         class="min-w-[36px] px-3 py-2 rounded-md text-sm font-medium border transition-colors focus:outline-none"
-                        :class="page === currentPage ?
-                            'bg-[#37517e] text-white border-[#37517e] shadow-sm' :
-                            (typeof page === 'number' ?
-                                'bg-white text-gray-700 border-gray-200 hover:bg-gray-50' :
-                                'bg-transparent border-transparent text-gray-400 cursor-default')"
+                        :class="page === currentPage ? 'bg-[#37517e] text-white border-[#37517e] shadow-sm' : (
+                            typeof page === 'number' ?
+                            'bg-white text-gray-700 border-gray-200 hover:bg-gray-50' :
+                            'bg-transparent border-transparent text-gray-400 cursor-default')"
                         x-text="page" :disabled="typeof page !== 'number'">
                     </button>
                 </template>
 
-                <button @click="currentPage < totalPages ? currentPage++ : null" :disabled="currentPage === totalPages"
+                <button @click="currentPage < totalPages ? currentPage++ : null"
+                    :disabled="currentPage === totalPages"
                     class="px-3 py-2 rounded-md border border-gray-200 bg-white text-gray-500 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition">
                     <i data-lucide="chevron-right" class="w-4 h-4"></i>
                 </button>
@@ -281,9 +483,7 @@
                                     'rounded-xl border-gray-200 group-hover:border-[#37517e]/50'">
                                 <span x-text="formData.class ? formData.class : 'Pilih Kelas...'"
                                     class="block truncate"
-                                    :class="formData.class ? 'text-gray-900' : 'text-gray-500'">
-                                </span>
-
+                                    :class="formData.class ? 'text-gray-900' : 'text-gray-500'"></span>
                                 <span
                                     class="absolute inset-y-0 right-0 flex flex-col justify-center pr-3 pointer-events-none text-gray-400">
                                     <i data-lucide="chevron-down"
@@ -305,7 +505,6 @@
                                 x-transition:leave-end="transform opacity-0 -translate-y-2"
                                 class="absolute z-20 -mt-[2px] w-full bg-white shadow-[0_10px_20px_-5px_rgba(0,0,0,0.1)] rounded-b-xl border border-t-0 border-[#37517e] overflow-hidden"
                                 style="display: none;">
-
                                 <div class="sticky top-0 z-30 bg-white p-2 border-b border-gray-100">
                                     <div class="relative">
                                         <input x-ref="searchInput" x-model="search" type="text"
@@ -324,14 +523,13 @@
                                         ul::-webkit-scrollbar {
                                             display: none;
                                         }
-                                    </style> <template x-for="option in filteredOptions" :key="option">
+                                    </style>
+                                    <template x-for="option in filteredOptions" :key="option">
                                         <li @click="formData.class = option; open = false; search = ''"
                                             class="cursor-pointer select-none relative py-2.5 pl-4 pr-9 text-sm hover:bg-indigo-50/80 transition-colors duration-150"
                                             :class="formData.class === option ? 'bg-indigo-50 text-[#37517e] font-semibold' :
                                                 'text-gray-700'">
-
                                             <span x-text="option" class="block truncate"></span>
-
                                             <span x-show="formData.class === option"
                                                 class="absolute inset-y-0 right-0 flex items-center pr-3 text-[#37517e]">
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
@@ -343,7 +541,6 @@
                                             </span>
                                         </li>
                                     </template>
-
                                     <div x-show="filteredOptions.length === 0"
                                         class="px-4 py-6 text-sm text-gray-500 text-center flex flex-col items-center justify-center gap-2">
                                         <i data-lucide="info" class="w-6 h-6 text-gray-300"></i>
@@ -371,9 +568,7 @@
                                 :class="open ? 'rounded-t-xl border-[#37517e] ring-2 ring-[#37517e]/20 border-b-transparent' :
                                     'rounded-xl border-gray-200 group-hover:border-[#37517e]/50'">
                                 <span x-text="currentLabel" class="block truncate"
-                                    :class="formData.gender ? 'text-gray-900' : 'text-gray-500'">
-                                </span>
-
+                                    :class="formData.gender ? 'text-gray-900' : 'text-gray-500'"></span>
                                 <span
                                     class="absolute inset-y-0 right-0 flex flex-col justify-center pr-3 pointer-events-none text-gray-400">
                                     <i data-lucide="chevron-down"
@@ -395,16 +590,13 @@
                                 x-transition:leave-end="transform opacity-0 -translate-y-2"
                                 class="absolute z-20 -mt-[2px] w-full bg-white shadow-[0_10px_20px_-5px_rgba(0,0,0,0.1)] rounded-b-xl border border-t-0 border-[#37517e] overflow-hidden"
                                 style="display: none;">
-
                                 <ul class="py-1">
                                     <template x-for="option in options" :key="option.value">
                                         <li @click="formData.gender = option.value; open = false"
                                             class="cursor-pointer select-none relative py-2.5 pl-4 pr-9 text-sm hover:bg-indigo-50/80 transition-colors duration-150"
                                             :class="formData.gender === option.value ?
                                                 'bg-indigo-50 text-[#37517e] font-semibold' : 'text-gray-700'">
-
                                             <span x-text="option.label" class="block truncate"></span>
-
                                             <span x-show="formData.gender === option.value"
                                                 class="absolute inset-y-0 right-0 flex items-center pr-3 text-[#37517e]">
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"

@@ -29,6 +29,11 @@ Route::middleware('auth')->group(function () {
     Route::get('/siswa', Siswa::class)->name('siswa');
     Route::post('/siswa/store', [SiswaController::class, 'store'])->name('siswa.store');
     Route::delete('/siswa/{id}', [SiswaController::class, 'destroy'])->name('siswa.destroy');
+    Route::get('/siswa/export', [SiswaController::class, 'export'])->name('siswa.export');
+    Route::post('/siswa/import', [SiswaController::class, 'import'])->name('siswa.import');
+    Route::get('/siswa/template', [SiswaController::class, 'downloadTemplate'])->name('siswa.template');
+    Route::post('/siswa/preview', [SiswaController::class, 'previewImport'])->name('siswa.preview');
+    Route::post('/siswa/store-batch', [SiswaController::class, 'storeBatch'])->name('siswa.storeBatch');
     Route::get('/guru', Guru::class)->name('guru');
     Route::post('/guru/store', [GuruController::class, 'store'])->name('guru.store');
     Route::delete('/guru/{id}', [GuruController::class, 'destroy'])->name('guru.destroy');

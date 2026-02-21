@@ -236,7 +236,7 @@
                     </span>
                 </a>
 
-                {{-- MENU MAPEL --}}
+                {{-- MENU walas --}}
                 <a href="/plot-walas"
                     class="flex flex-col items-center gap-2 p-3 rounded-xl active:scale-95 transition-all border
         {{ Request::is('plot-walas*')
@@ -278,7 +278,7 @@
             @if (auth()->user() && auth()->user()->usertype === 'admin')
                 {{-- Cek apakah URL saat ini adalah salah satu dari sub-menu master --}}
                 @php
-                    $isMasterActive = Request::is('siswa*', 'guru*', 'user*', 'kelas*', 'mapel*');
+                    $isMasterActive = Request::is('siswa*', 'guru*', 'user*', 'kelas*', 'plot-walas*');
                 @endphp
 
                 <button @click="open = !open"

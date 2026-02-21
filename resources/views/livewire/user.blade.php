@@ -202,7 +202,7 @@
                     class="px-3 py-2 rounded-md border border-gray-200 bg-white text-gray-500 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition">
                     <i data-lucide="chevron-left" class="w-4 h-4"></i>
                 </button>
-                <template x-for="page in pageNumbers">
+                <template x-for="(page, index) in pageNumbers" :key="index">
                     <button @click="typeof page === 'number' ? currentPage = page : null"
                         class="min-w-[36px] px-3 py-2 rounded-md text-sm font-medium border transition-colors focus:outline-none"
                         :class="page === currentPage ?

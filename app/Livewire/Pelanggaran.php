@@ -18,6 +18,8 @@ class Pelanggaran extends Component
     public $poin;
     public $keterangan;
     public $bukti_foto;
+
+    // User info
     public $usertype;
     public $currentSiswaId = null;
 
@@ -30,8 +32,9 @@ class Pelanggaran extends Component
         $user = Auth::user();
         $this->usertype = $user->usertype ?? 'guest';
 
+        // Jika usertype siswa, ambil id_siswa mereka
         if ($this->usertype === 'siswa') {
-            $siswa = SiswaModel::where('id_user', $user->id)->first();
+            $siswa = SiswaModel::where('id_user', $user->id_user)->first();
             if ($siswa) {
                 $this->currentSiswaId = $siswa->id_siswa;
             }
@@ -77,6 +80,16 @@ class Pelanggaran extends Component
 
         if ($usertype === 'siswa') {
             $siswa = SiswaModel::where('id_user', $user->id)->first();
+        // Membersihkan spasi dan memaksa huruf kecil agar validasi akurat
+        $usertype = strtolower(trim($user->usertype ?? 'guest'));
+
+        $data = [];
+        $students = [];
+
+        // 1. JIKA USER ADALAH SISWA
+        if ($usertype === 'siswa') {
+            // Cari data siswa berdasarkan ID User yang login
+            $siswa = SiswaModel::where('id_user', $user->id_user)->first();
 
             if ($siswa) {
                 $data = PelanggaranModel::query()
@@ -89,6 +102,7 @@ class Pelanggaran extends Component
                     ->join('siswas', 'pelanggarans.id_siswa', '=', 'siswas.id_siswa')
                     ->leftJoin('users', \DB::raw('users.namalengkap COLLATE utf8mb4_unicode_ci'), '=', \DB::raw('pelanggarans.dicatat_oleh COLLATE utf8mb4_unicode_ci'))
                     ->where('pelanggarans.id_siswa', $siswa->id_siswa)
+                    ->where('pelanggarans.id_siswa', $siswa->id_siswa) // <--- PENTING: Filter ID Siswa
                     ->orderBy('id_pelanggaran', 'desc')
                     ->get()
                     ->map(function ($item) {
@@ -107,9 +121,14 @@ class Pelanggaran extends Component
                 ]);
             } else {
                 $students = collect([]);
+                // Jika akun tipe siswa tapi datanya belum ada di tabel 'siswas'
                 $data = collect([]);
+                $students = collect([]);
             }
         } else {
+        }
+        // 2. JIKA USER ADALAH ADMIN / GURU / WALAS
+        else {
             $data = PelanggaranModel::join('siswas', 'pelanggarans.id_siswa', '=', 'siswas.id_siswa')
                 ->leftJoin('users', \DB::raw('users.namalengkap COLLATE utf8mb4_unicode_ci'), '=', \DB::raw('pelanggarans.dicatat_oleh COLLATE utf8mb4_unicode_ci'))
                 ->select(

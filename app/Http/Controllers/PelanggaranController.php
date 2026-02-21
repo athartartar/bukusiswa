@@ -64,6 +64,10 @@ class PelanggaranController extends Controller
         if ($user && $user->usertype === 'siswa') {
             $siswa = Siswa::where('id_user', $user->id)->first();
 
+            // Ambil siswa berdasarkan user
+            $siswa = Siswa::where('id_user', $user->id_user)->first();
+            
+            // Jika bukan siswa ini, return kosong atau error
             if (!$siswa || $siswa->id_siswa != $id_siswa) {
                 return response()->json([
                     'success' => false,

@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Pelanggaran;
 use App\Models\Siswa;
-use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 
@@ -21,13 +20,12 @@ class PelanggaranController extends Controller
             'bukti_foto' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120',
         ]);
 
-        // Simpan namalengkap dari tabel users
-        $dicatatOleh = 'guest';
+        $dicatatOleh = 'guest'; // Default jika tidak login
 
         if (Auth::check()) {
             $user = Auth::user();
-            // Prioritaskan namalengkap, fallback ke name/username/email
-            $dicatatOleh = $user->namalengkap ?? $user->name ?? $user->username ?? $user->email ?? 'admin';
+            // Gunakan name atau username atau email
+            $dicatatOleh = $user->namalengkap ?? $user->username ?? 'admin';
         }
 
         $data = [
@@ -36,7 +34,7 @@ class PelanggaranController extends Controller
             'jenis_pelanggaran' => $request->jenis_pelanggaran,
             'poin' => $request->poin,
             'keterangan' => $request->keterangan,
-            'dicatat_oleh' => $dicatatOleh,
+            'dicatat_oleh' => $dicatatOleh
         ];
 
         if ($request->hasFile('bukti_foto')) {
@@ -61,40 +59,31 @@ class PelanggaranController extends Controller
     {
         $user = Auth::user();
 
-        if ($user && $user->usertype === 'siswa') {
-            $siswa = Siswa::where('id_user', $user->id)->first();
-
-            // Ambil siswa berdasarkan user
+        // Jika usertype siswa, hanya bisa lihat riwayat dirinya sendiri
+        if ($user && strtolower(trim($user->usertype)) === 'siswa') {
             $siswa = Siswa::where('id_user', $user->id_user)->first();
-            
-            // Jika bukan siswa ini, return kosong atau error
+
+            // Jika data siswa tidak ditemukan atau ID tidak cocok, tolak akses
             if (!$siswa || $siswa->id_siswa != $id_siswa) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Anda hanya bisa melihat riwayat sendiri'
+                    'message' => 'Anda hanya bisa melihat riwayat pelanggaran Anda sendiri'
                 ], 403);
             }
         }
 
-        $riwayat = Pelanggaran::where('pelanggarans.id_siswa', $id_siswa)
-            ->leftJoin('users', \DB::raw('users.namalengkap COLLATE utf8mb4_unicode_ci'), '=', \DB::raw('pelanggarans.dicatat_oleh COLLATE utf8mb4_unicode_ci'))
-            ->select(
-                'pelanggarans.*',
-                \DB::raw('COALESCE(users.namalengkap, pelanggarans.dicatat_oleh) as nama_pencatat')
-            )
-            ->orderBy('pelanggarans.created_at', 'desc')
+        $riwayat = Pelanggaran::where('id_siswa', $id_siswa)
+            ->orderBy('created_at', 'desc')
             ->get()
             ->map(function ($item) use ($user) {
-                $item->dicatat_oleh = $item->nama_pencatat;
-
                 $item->can_delete = false;
 
                 if ($user) {
                     if ($user->usertype === 'admin') {
                         $item->can_delete = true;
                     } else {
-                        $userNama = $user->namalengkap ?? $user->name ?? $user->username ?? $user->email;
-                        if ($item->dicatat_oleh === $userNama) {
+                        $userName = $user->namalengkap ?? $user->username;
+                        if ($item->dicatat_oleh === $userName) {
                             $item->can_delete = true;
                         }
                     }
@@ -126,7 +115,6 @@ class PelanggaranController extends Controller
     public function destroy($id_pelanggaran)
     {
         $pelanggaran = Pelanggaran::where('id_pelanggaran', $id_pelanggaran)->firstOrFail();
-
         $user = Auth::user();
         $canDelete = false;
 
@@ -134,8 +122,8 @@ class PelanggaranController extends Controller
             if ($user->usertype === 'admin') {
                 $canDelete = true;
             } else {
-                $userNama = $user->namalengkap ?? $user->name ?? $user->username ?? $user->email;
-                if ($pelanggaran->dicatat_oleh === $userNama) {
+                $userName = $user->namalengkap ?? $user->username;
+                if ($pelanggaran->dicatat_oleh === $userName) {
                     $canDelete = true;
                 }
             }

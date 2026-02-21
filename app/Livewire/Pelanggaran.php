@@ -30,13 +30,16 @@ class Pelanggaran extends Component
         }
 
         $user = Auth::user();
-        $this->usertype = $user->usertype ?? 'guest';
+        // Pastikan usertype selalu huruf kecil agar pengecekan tidak gagal
+        $this->usertype = strtolower(trim($user->usertype ?? 'guest'));
 
         // Jika usertype siswa, ambil id_siswa mereka
         if ($this->usertype === 'siswa') {
             $siswa = SiswaModel::where('id_user', $user->id_user)->first();
             if ($siswa) {
                 $this->currentSiswaId = $siswa->id_siswa;
+                // Opsional: Langsung set form id_siswa ke id dia sendiri
+                $this->id_siswa = $siswa->id_siswa;
             }
         }
     }
@@ -50,16 +53,13 @@ class Pelanggaran extends Component
             'poin' => 'required|numeric',
         ]);
 
-        $user = Auth::user();
-        $dicatatOleh = $user->namalengkap ?? $user->name ?? 'admin';
-
         PelanggaranModel::create([
             'id_siswa' => $this->id_siswa,
             'tanggal' => $this->tanggal,
             'jenis_pelanggaran' => $this->jenis_pelanggaran,
             'poin' => $this->poin,
             'keterangan' => $this->keterangan,
-            'dicatat_oleh' => $dicatatOleh,
+            'dicatat_oleh' => Auth::user()->namalengkap ?? Auth::user()->username ?? 'admin'
         ]);
 
         session()->flash('success', 'Pelanggaran berhasil ditambahkan');
@@ -69,17 +69,13 @@ class Pelanggaran extends Component
             'tanggal',
             'jenis_pelanggaran',
             'poin',
-            'keterangan',
+            'keterangan'
         ]);
     }
 
     public function render()
     {
         $user = Auth::user();
-        $usertype = $user->usertype ?? 'guest';
-
-        if ($usertype === 'siswa') {
-            $siswa = SiswaModel::where('id_user', $user->id)->first();
         // Membersihkan spasi dan memaksa huruf kecil agar validasi akurat
         $usertype = strtolower(trim($user->usertype ?? 'guest'));
 
@@ -88,7 +84,7 @@ class Pelanggaran extends Component
 
         // 1. JIKA USER ADALAH SISWA
         if ($usertype === 'siswa') {
-            // Cari data siswa berdasarkan ID User yang login
+            // Gunakan $user->id
             $siswa = SiswaModel::where('id_user', $user->id_user)->first();
 
             if ($siswa) {
@@ -96,53 +92,39 @@ class Pelanggaran extends Component
                     ->select(
                         'pelanggarans.*',
                         'siswas.namalengkap as nama_siswa',
-                        'siswas.kelas',
-                        \DB::raw('COALESCE(users.namalengkap, pelanggarans.dicatat_oleh) as nama_pencatat')
+                        'siswas.kelas'
                     )
                     ->join('siswas', 'pelanggarans.id_siswa', '=', 'siswas.id_siswa')
-                    ->leftJoin('users', \DB::raw('users.namalengkap COLLATE utf8mb4_unicode_ci'), '=', \DB::raw('pelanggarans.dicatat_oleh COLLATE utf8mb4_unicode_ci'))
-                    ->where('pelanggarans.id_siswa', $siswa->id_siswa)
-                    ->where('pelanggarans.id_siswa', $siswa->id_siswa) // <--- PENTING: Filter ID Siswa
+                    ->where('pelanggarans.id_siswa', $siswa->id_siswa) // Pastikan filter ID Siswa jalan
                     ->orderBy('id_pelanggaran', 'desc')
-                    ->get()
-                    ->map(function ($item) {
-                        $item->dicatat_oleh = $item->nama_pencatat;
-                        return $item;
-                    });
+                    ->get();
 
+                // Dropdown hanya berisi diri sendiri
                 $students = collect([
-                    (object) [
+                    (object)[
                         'id' => $siswa->id_siswa,
                         'name' => $siswa->namalengkap,
                         'class' => $siswa->kelas,
                         'nis' => $siswa->nis,
-                        'total_poin' => PelanggaranModel::where('id_siswa', $siswa->id_siswa)->sum('poin'),
+                        'total_poin' => PelanggaranModel::where('id_siswa', $siswa->id_siswa)->sum('poin')
                     ]
                 ]);
             } else {
-                $students = collect([]);
-                // Jika akun tipe siswa tapi datanya belum ada di tabel 'siswas'
+                // User login sebagai siswa, tapi datanya tidak ada di tabel siswas
                 $data = collect([]);
                 $students = collect([]);
             }
-        } else {
         }
-        // 2. JIKA USER ADALAH ADMIN / GURU / WALAS
+        // 2. JIKA USER ADALAH ADMIN / GURU
         else {
             $data = PelanggaranModel::join('siswas', 'pelanggarans.id_siswa', '=', 'siswas.id_siswa')
-                ->leftJoin('users', \DB::raw('users.namalengkap COLLATE utf8mb4_unicode_ci'), '=', \DB::raw('pelanggarans.dicatat_oleh COLLATE utf8mb4_unicode_ci'))
                 ->select(
                     'pelanggarans.*',
                     'siswas.namalengkap as nama_siswa',
-                    'siswas.kelas',
-                    \DB::raw('COALESCE(users.namalengkap, pelanggarans.dicatat_oleh) as nama_pencatat')
+                    'siswas.kelas'
                 )
                 ->orderBy('id_pelanggaran', 'desc')
-                ->get()
-                ->map(function ($item) {
-                    $item->dicatat_oleh = $item->nama_pencatat;
-                    return $item;
-                });
+                ->get();
 
             $students = SiswaModel::select('id_siswa as id', 'namalengkap as name', 'kelas as class', 'nis')
                 ->orderBy('namalengkap')
@@ -157,7 +139,7 @@ class Pelanggaran extends Component
             'data' => $data,
             'students' => $students,
             'usertype' => $usertype,
-            'currentSiswaId' => $this->currentSiswaId,
+            'currentSiswaId' => $this->currentSiswaId
         ]);
     }
 }

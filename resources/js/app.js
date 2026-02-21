@@ -475,197 +475,207 @@ document.addEventListener("alpine:init", () => {
 
     // 2. Definisikan Component Alpine 'siswaData'
     // Perhatikan parameter: (dataSiswa, urlSimpan, tokenCsrf)
-    Alpine.data("siswaData", (initialStudents, routeStore, csrfToken) => ({
-        search: "",
-        rowsPerPage: 5,
-        currentPage: 1,
-        drawerOpen: false,
-        drawerMode: "add",
-        sortCol: "name",
-        sortAsc: true,
-        isLoading: false,
-        formData: { id: null, name: "", nis: "", class: "", gender: "" },
+    Alpine.data(
+        "siswaData",
+        (initialStudents, listKelas, routeStore, csrfToken) => ({
+            search: "",
+            rowsPerPage: 5,
+            currentPage: 1,
+            drawerOpen: false,
+            drawerMode: "add",
+            sortCol: "name",
+            sortAsc: true,
+            isLoading: false,
+            formData: { id: null, name: "", nis: "", class: "", gender: "" },
+            optionsKelas: listKelas,
+            // Ambil data dari parameter yang dikirim Blade
+            students: initialStudents,
 
-        // Ambil data dari parameter yang dikirim Blade
-        students: initialStudents,
-
-        get filteredStudents() {
-            let result = this.students;
-            if (this.search !== "") {
-                const q = this.search.toLowerCase();
-                result = result.filter(
-                    (s) =>
-                        s.name.toLowerCase().includes(q) ||
-                        s.nis.includes(q) ||
-                        s.class.toLowerCase().includes(q),
-                );
-            }
-            result = result.sort((a, b) => {
-                let valA = a[this.sortCol].toString().toLowerCase();
-                let valB = b[this.sortCol].toString().toLowerCase();
-                if (valA < valB) return this.sortAsc ? -1 : 1;
-                if (valA > valB) return this.sortAsc ? 1 : -1;
-                return 0;
-            });
-            return result;
-        },
-        get totalPages() {
-            return Math.ceil(this.filteredStudents.length / this.rowsPerPage);
-        },
-        get paginatedStudents() {
-            let start = (this.currentPage - 1) * this.rowsPerPage;
-            return this.filteredStudents.slice(start, start + this.rowsPerPage);
-        },
-        get pageNumbers() {
-            let pages = [];
-            let total = this.totalPages;
-            let current = this.currentPage;
-            if (total <= 7) {
-                for (let i = 1; i <= total; i++) pages.push(i);
-            } else {
-                if (current <= 4) {
-                    pages = [1, 2, 3, 4, 5, "...", total];
-                } else if (current >= total - 3) {
-                    pages = [
-                        1,
-                        "...",
-                        total - 4,
-                        total - 3,
-                        total - 2,
-                        total - 1,
-                        total,
-                    ];
-                } else {
-                    pages = [
-                        1,
-                        "...",
-                        current - 1,
-                        current,
-                        current + 1,
-                        "...",
-                        total,
-                    ];
+            get filteredStudents() {
+                let result = this.students;
+                if (this.search !== "") {
+                    const q = this.search.toLowerCase();
+                    result = result.filter(
+                        (s) =>
+                            s.name.toLowerCase().includes(q) ||
+                            s.nis.includes(q) ||
+                            s.class.toLowerCase().includes(q),
+                    );
                 }
-            }
-            return pages;
-        },
-        get drawerTitle() {
-            if (this.drawerMode === "add") return "Tambah Siswa Baru";
-            if (this.drawerMode === "edit") return "Edit Data Siswa";
-            return "Konfirmasi Hapus";
-        },
-        get drawerDescription() {
-            if (this.drawerMode === "add")
-                return "Silakan lengkapi formulir di bawah ini.";
-            if (this.drawerMode === "edit")
-                return "Lakukan perubahan pada data siswa.";
-            return "Tindakan ini akan menghapus data siswa secara permanen.";
-        },
-        sortBy(col) {
-            if (this.sortCol === col) {
-                this.sortAsc = !this.sortAsc;
-            } else {
-                this.sortCol = col;
-                this.sortAsc = true;
-            }
-        },
-        openDrawer(mode, student = null) {
-            this.drawerMode = mode;
-            if (mode === "add") {
-                this.formData = {
-                    id: null,
-                    name: "",
-                    nis: "",
-                    class: "",
-                    gender: "",
-                };
-            } else {
-                this.formData = { ...student };
-            }
-            this.drawerOpen = true;
-        },
-        updateRows() {
-            this.currentPage = 1;
-        },
-
-        // --- SAVE DATA (Pake Toaster) ---
-        async saveData() {
-            this.isLoading = true;
-            try {
-                // Gunakan parameter routeStore dan csrfToken
-                let response = await fetch(routeStore, {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "X-CSRF-TOKEN": csrfToken,
-                    },
-                    body: JSON.stringify(this.formData),
+                result = result.sort((a, b) => {
+                    let valA = a[this.sortCol].toString().toLowerCase();
+                    let valB = b[this.sortCol].toString().toLowerCase();
+                    if (valA < valB) return this.sortAsc ? -1 : 1;
+                    if (valA > valB) return this.sortAsc ? 1 : -1;
+                    return 0;
                 });
+                return result;
+            },
+            get totalPages() {
+                return Math.ceil(
+                    this.filteredStudents.length / this.rowsPerPage,
+                );
+            },
+            get paginatedStudents() {
+                let start = (this.currentPage - 1) * this.rowsPerPage;
+                return this.filteredStudents.slice(
+                    start,
+                    start + this.rowsPerPage,
+                );
+            },
+            get pageNumbers() {
+                let pages = [];
+                let total = this.totalPages;
+                let current = this.currentPage;
+                if (total <= 7) {
+                    for (let i = 1; i <= total; i++) pages.push(i);
+                } else {
+                    if (current <= 4) {
+                        pages = [1, 2, 3, 4, 5, "...", total];
+                    } else if (current >= total - 3) {
+                        pages = [
+                            1,
+                            "...",
+                            total - 4,
+                            total - 3,
+                            total - 2,
+                            total - 1,
+                            total,
+                        ];
+                    } else {
+                        pages = [
+                            1,
+                            "...",
+                            current - 1,
+                            current,
+                            current + 1,
+                            "...",
+                            total,
+                        ];
+                    }
+                }
+                return pages;
+            },
+            get drawerTitle() {
+                if (this.drawerMode === "add") return "Tambah Siswa Baru";
+                if (this.drawerMode === "edit") return "Edit Data Siswa";
+                return "Konfirmasi Hapus";
+            },
+            get drawerDescription() {
+                if (this.drawerMode === "add")
+                    return "Silakan lengkapi formulir di bawah ini.";
+                if (this.drawerMode === "edit")
+                    return "Lakukan perubahan pada data siswa.";
+                return "Tindakan ini akan menghapus data siswa secara permanen.";
+            },
+            sortBy(col) {
+                if (this.sortCol === col) {
+                    this.sortAsc = !this.sortAsc;
+                } else {
+                    this.sortCol = col;
+                    this.sortAsc = true;
+                }
+            },
+            openDrawer(mode, student = null) {
+                this.drawerMode = mode;
+                if (mode === "add") {
+                    this.formData = {
+                        id: null,
+                        name: "",
+                        nis: "",
+                        class: "",
+                        gender: "",
+                    };
+                } else {
+                    this.formData = { ...student };
+                }
+                this.drawerOpen = true;
+            },
+            updateRows() {
+                this.currentPage = 1;
+            },
 
-                let result = await response.json();
-                if (!response.ok)
-                    throw new Error(result.message || "Gagal menyimpan data");
+            // --- SAVE DATA (Pake Toaster) ---
+            async saveData() {
+                this.isLoading = true;
+                try {
+                    // Gunakan parameter routeStore dan csrfToken
+                    let response = await fetch(routeStore, {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "X-CSRF-TOKEN": csrfToken,
+                        },
+                        body: JSON.stringify(this.formData),
+                    });
 
-                this.drawerOpen = false;
+                    let result = await response.json();
+                    if (!response.ok)
+                        throw new Error(
+                            result.message || "Gagal menyimpan data",
+                        );
 
-                // Panggil Toast
-                Toast.fire({
-                    icon: "success",
-                    title: "Berhasil disimpan",
-                }).then(() => {
-                    location.reload();
+                    this.drawerOpen = false;
+
+                    // Panggil Toast
+                    Toast.fire({
+                        icon: "success",
+                        title: "Berhasil disimpan",
+                    }).then(() => {
+                        location.reload();
+                    });
+                } catch (error) {
+                    Toast.fire({
+                        icon: "error",
+                        title: "Gagal menyimpan data",
+                    });
+                } finally {
+                    this.isLoading = false;
+                }
+            },
+
+            // --- DELETE DATA (Pake Toaster) ---
+            async deleteData() {
+                this.isLoading = true;
+                try {
+                    // Untuk delete URL-nya manual build string gapapa, tapi token tetep pake param
+                    let response = await fetch("/siswa/" + this.formData.id, {
+                        method: "DELETE",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "X-CSRF-TOKEN": csrfToken,
+                        },
+                    });
+                    if (!response.ok) throw new Error("Gagal menghapus data");
+                    this.drawerOpen = false;
+
+                    // Panggil Toast
+                    Toast.fire({
+                        icon: "success",
+                        title: "Data dihapus",
+                    }).then(() => {
+                        location.reload();
+                    });
+                } catch (error) {
+                    Toast.fire({
+                        icon: "error",
+                        title: "Gagal menghapus data",
+                    });
+                } finally {
+                    this.isLoading = false;
+                }
+            },
+
+            init() {
+                this.$watch("paginatedStudents", () => {
+                    setTimeout(() => lucide.createIcons(), 50);
                 });
-            } catch (error) {
-                Toast.fire({
-                    icon: "error",
-                    title: "Gagal menyimpan data",
+                this.$watch("drawerOpen", () => {
+                    setTimeout(() => lucide.createIcons(), 50);
                 });
-            } finally {
-                this.isLoading = false;
-            }
-        },
-
-        // --- DELETE DATA (Pake Toaster) ---
-        async deleteData() {
-            this.isLoading = true;
-            try {
-                // Untuk delete URL-nya manual build string gapapa, tapi token tetep pake param
-                let response = await fetch("/siswa/" + this.formData.id, {
-                    method: "DELETE",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "X-CSRF-TOKEN": csrfToken,
-                    },
-                });
-                if (!response.ok) throw new Error("Gagal menghapus data");
-                this.drawerOpen = false;
-
-                // Panggil Toast
-                Toast.fire({
-                    icon: "success",
-                    title: "Data dihapus",
-                }).then(() => {
-                    location.reload();
-                });
-            } catch (error) {
-                Toast.fire({
-                    icon: "error",
-                    title: "Gagal menghapus data",
-                });
-            } finally {
-                this.isLoading = false;
-            }
-        },
-
-        init() {
-            this.$watch("paginatedStudents", () => {
-                setTimeout(() => lucide.createIcons(), 50);
-            });
-            this.$watch("drawerOpen", () => {
-                setTimeout(() => lucide.createIcons(), 50);
-            });
-        },
-    }));
+            },
+        }),
+    );
 });
 
 // user tabel
@@ -1123,6 +1133,221 @@ document.addEventListener("alpine:init", () => {
             });
             this.$watch("drawerOpen", () => {
                 setTimeout(() => lucide.createIcons(), 50);
+            });
+        },
+    }));
+});
+
+//kelas tabel
+document.addEventListener("alpine:init", () => {
+    const Toast = Swal.mixin({
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false,
+        timer: 1000,
+        timerProgressBar: true,
+        didOpen: (toast) => {
+            toast.addEventListener("mouseenter", Swal.stopTimer);
+            toast.addEventListener("mouseleave", Swal.resumeTimer);
+        },
+    });
+
+    // --- COMPONENT DATA KELAS ---
+    Alpine.data("kelasData", (initialKelas, routeStore, csrfToken) => ({
+        search: "",
+        rowsPerPage: 5, // Disamakan dengan guru (5 baris)
+        currentPage: 1,
+        drawerOpen: false,
+        drawerMode: "add",
+        sortCol: "kode_kelas", // Default sorting pakai kode_kelas
+        sortAsc: true,
+        isLoading: false,
+
+        // Field untuk Kelas (Hanya id, kode_kelas, status)
+        formData: {
+            id: null,
+            kode_kelas: "",
+            status: "Aktif",
+        },
+
+        // Ambil data dari parameter blade
+        kelases: initialKelas,
+
+        get filteredKelas() {
+            let result = this.kelases;
+            if (this.search !== "") {
+                const q = this.search.toLowerCase();
+                result = result.filter(
+                    (k) =>
+                        k.kode_kelas.toLowerCase().includes(q) ||
+                        k.status.toLowerCase().includes(q),
+                );
+            }
+            result = result.sort((a, b) => {
+                let valA = a[this.sortCol].toString().toLowerCase();
+                let valB = b[this.sortCol].toString().toLowerCase();
+                if (valA < valB) return this.sortAsc ? -1 : 1;
+                if (valA > valB) return this.sortAsc ? 1 : -1;
+                return 0;
+            });
+            return result;
+        },
+        get totalPages() {
+            return Math.ceil(this.filteredKelas.length / this.rowsPerPage);
+        },
+        get paginatedKelas() {
+            let start = (this.currentPage - 1) * this.rowsPerPage;
+            return this.filteredKelas.slice(start, start + this.rowsPerPage);
+        },
+        get pageNumbers() {
+            let pages = [];
+            let total = this.totalPages;
+            let current = this.currentPage;
+            if (total <= 7) {
+                for (let i = 1; i <= total; i++) pages.push(i);
+            } else {
+                if (current <= 4) {
+                    pages = [1, 2, 3, 4, 5, "...", total];
+                } else if (current >= total - 3) {
+                    pages = [
+                        1,
+                        "...",
+                        total - 4,
+                        total - 3,
+                        total - 2,
+                        total - 1,
+                        total,
+                    ];
+                } else {
+                    pages = [
+                        1,
+                        "...",
+                        current - 1,
+                        current,
+                        current + 1,
+                        "...",
+                        total,
+                    ];
+                }
+            }
+            return pages;
+        },
+        get drawerTitle() {
+            if (this.drawerMode === "add") return "Tambah Kelas Baru";
+            if (this.drawerMode === "edit") return "Edit Data Kelas";
+            return "Konfirmasi Hapus";
+        },
+        get drawerDescription() {
+            if (this.drawerMode === "add")
+                return "Silakan lengkapi formulir di bawah ini.";
+            if (this.drawerMode === "edit")
+                return "Lakukan perubahan pada data kelas.";
+            return "Tindakan ini akan menghapus data kelas secara permanen.";
+        },
+        sortBy(col) {
+            if (this.sortCol === col) {
+                this.sortAsc = !this.sortAsc;
+            } else {
+                this.sortCol = col;
+                this.sortAsc = true;
+            }
+        },
+        openDrawer(mode, kelas = null) {
+            this.drawerMode = mode;
+            if (mode === "add") {
+                this.formData = {
+                    id: null,
+                    kode_kelas: "",
+                    status: "Aktif",
+                };
+            } else {
+                // Spread operator untuk copy data kelas ke form
+                this.formData = {
+                    ...kelas,
+                };
+            }
+            this.drawerOpen = true;
+        },
+        updateRows() {
+            this.currentPage = 1;
+        },
+
+        // --- SAVE DATA ---
+        async saveData() {
+            this.isLoading = true;
+            try {
+                let response = await fetch(routeStore, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRF-TOKEN": csrfToken,
+                    },
+                    body: JSON.stringify(this.formData),
+                });
+
+                let result = await response.json();
+                if (!response.ok)
+                    throw new Error(result.message || "Gagal menyimpan data");
+
+                this.drawerOpen = false;
+                Toast.fire({
+                    icon: "success",
+                    title: "Berhasil disimpan",
+                }).then(() => {
+                    location.reload();
+                });
+            } catch (error) {
+                Toast.fire({
+                    icon: "error",
+                    title: "Gagal menyimpan data",
+                });
+            } finally {
+                this.isLoading = false;
+            }
+        },
+
+        // --- DELETE DATA ---
+        async deleteData() {
+            this.isLoading = true;
+            try {
+                // Endpoint delete ke /kelas/id
+                let response = await fetch("/kelas/" + this.formData.id, {
+                    method: "DELETE",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRF-TOKEN": csrfToken,
+                    },
+                });
+                if (!response.ok) throw new Error("Gagal menghapus data");
+                this.drawerOpen = false;
+                Toast.fire({
+                    icon: "success",
+                    title: "Data dihapus",
+                }).then(() => {
+                    location.reload();
+                });
+            } catch (error) {
+                Toast.fire({
+                    icon: "error",
+                    title: "Gagal menghapus data",
+                });
+            } finally {
+                this.isLoading = false;
+            }
+        },
+
+        init() {
+            this.$watch("paginatedKelas", () => {
+                setTimeout(
+                    () => typeof lucide !== "undefined" && lucide.createIcons(),
+                    50,
+                );
+            });
+            this.$watch("drawerOpen", () => {
+                setTimeout(
+                    () => typeof lucide !== "undefined" && lucide.createIcons(),
+                    50,
+                );
             });
         },
     }));

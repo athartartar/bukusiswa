@@ -13,6 +13,8 @@ use App\Livewire\Guru;
 use App\Http\Controllers\GuruController;
 use App\Livewire\Pelanggaran;
 use App\Http\Controllers\PelanggaranController;
+use App\Livewire\Kelas;
+use App\Http\Controllers\KelasController;
 
 
 Route::get('/', function () {
@@ -37,6 +39,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/guru', Guru::class)->name('guru');
     Route::post('/guru/store', [GuruController::class, 'store'])->name('guru.store');
     Route::delete('/guru/{id}', [GuruController::class, 'destroy'])->name('guru.destroy');
+    Route::get('/kelas', Kelas::class)->name('kelas');
+    Route::post('/kelas/store', [KelasController::class, 'store'])->name('kelas.store');
+    Route::delete('/kelas/{id}', [KelasController::class, 'destroy'])->name('kelas.destroy');
     Route::get('/profile', Profile::class)->name('profile');
     Route::get('/user', User::class)->name('user');
     Route::post('/user/store', [UserController::class, 'store'])->name('user.store');

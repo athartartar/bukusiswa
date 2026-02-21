@@ -1,5 +1,6 @@
 <div x-data='siswaData(
     @json($students),
+    @json($kelasOptions),
     "{{ route('siswa.store') }}",
     "{{ csrf_token() }}"
 )'
@@ -516,18 +517,17 @@
                     <div class="grid grid-cols-2 gap-4">
                         <div x-data="{
                             open: false,
-                            search: '',
-                            options: ['X RPL 1', 'X TSM 1', 'X AKL 2', 'XI DKV 1', 'XI RPL 2', 'XI TKJ 1', 'XII RPL 1', 'XII TKJ 2', 'XII DKV 2', 'XII MM 1'],
+                            searchKls: '', // Pakai nama variabel berbeda agar tidak bentrok dengan pencarian utama
                             get filteredOptions() {
-                                if (this.search === '') return this.options;
-                                return this.options.filter(item => item.toLowerCase().includes(this.search.toLowerCase()));
+                                if (this.searchKls === '') return optionsKelas; // Ambil dari optionsKelas di script induk
+                                return optionsKelas.filter(item => item.toLowerCase().includes(this.searchKls.toLowerCase()));
                             }
                         }" class="relative group" @click.outside="open = false">
 
                             <label class="block text-sm font-medium text-gray-700 mb-1.5">Kelas</label>
 
                             <button type="button"
-                                @click="open = !open; if(open) $nextTick(() => $refs.searchInput.focus())"
+                                @click="open = !open; if(open) $nextTick(() => $refs.searchInputKls.focus())"
                                 class="w-full pl-10 pr-10 py-2.5 text-left border bg-white focus:outline-none transition-all flex items-center justify-between relative z-10"
                                 :class="open ? 'rounded-t-xl border-[#37517e] ring-2 ring-[#37517e]/20 border-b-transparent' :
                                     'rounded-xl border-gray-200 group-hover:border-[#37517e]/50'">
@@ -544,7 +544,7 @@
 
                             <div
                                 class="absolute top-[38px] left-3 flex items-center pointer-events-none text-gray-400 z-20">
-                                <i data-lucide="graduation-cap" class="w-4 h-4"></i>
+                                <i data-lucide="building" class="w-4 h-4"></i>
                             </div>
 
                             <div x-show="open" x-transition:enter="transition ease-out duration-200"
@@ -555,9 +555,10 @@
                                 x-transition:leave-end="transform opacity-0 -translate-y-2"
                                 class="absolute z-20 -mt-[2px] w-full bg-white shadow-[0_10px_20px_-5px_rgba(0,0,0,0.1)] rounded-b-xl border border-t-0 border-[#37517e] overflow-hidden"
                                 style="display: none;">
+
                                 <div class="sticky top-0 z-30 bg-white p-2 border-b border-gray-100">
                                     <div class="relative">
-                                        <input x-ref="searchInput" x-model="search" type="text"
+                                        <input x-ref="searchInputKls" x-model="searchKls" type="text"
                                             class="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[#37517e] focus:ring-1 focus:ring-[#37517e] placeholder-gray-400 bg-gray-50/50"
                                             placeholder="Cari kelas...">
                                         <div
@@ -567,7 +568,7 @@
                                     </div>
                                 </div>
 
-                                <ul class="py-1 max-h-56 overflow-auto"
+                                <ul class="py-1 max-h-56 overflow-auto custom-scrollbar"
                                     style="scrollbar-width: none; -ms-overflow-style: none;">
                                     <style>
                                         ul::-webkit-scrollbar {
@@ -575,7 +576,7 @@
                                         }
                                     </style>
                                     <template x-for="option in filteredOptions" :key="option">
-                                        <li @click="formData.class = option; open = false; search = ''"
+                                        <li @click="formData.class = option; open = false; searchKls = ''"
                                             class="cursor-pointer select-none relative py-2.5 pl-4 pr-9 text-sm hover:bg-indigo-50/80 transition-colors duration-150"
                                             :class="formData.class === option ? 'bg-indigo-50 text-[#37517e] font-semibold' :
                                                 'text-gray-700'">

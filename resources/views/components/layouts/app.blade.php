@@ -50,6 +50,15 @@
                             </i>
                             <span class="{{ Route::is('siswa') ? 'font-bold' : 'font-medium' }}">Data Siswa</span>
                         </a>
+                        <a href="/kelas"
+                            class="flex items-center px-4 py-3 rounded-lg transition-colors
+                        {{ Route::is('kelas') ? 'bg-white/90 text-[#37517e]' : 'text-gray-300 hover:bg-white/10 hover:text-white' }}">
+                            <i data-lucide="building"
+                                class="w-5 h-5 mr-3 {{ Route::is('kelas') ? 'fill-[#37517e]/20 stroke-[#37517e]' : '' }}"
+                                @if (Route::is('kelas')) stroke-width="3" @endif>
+                            </i>
+                            <span class="{{ Route::is('kelas') ? 'font-bold' : 'font-medium' }}">Data Kelas</span>
+                        </a>
 
                         <a href="/guru"
                             class="flex items-center px-4 py-3 rounded-lg transition-colors
@@ -59,6 +68,15 @@
                                 @if (Route::is('guru')) stroke-width="3" @endif>
                             </i>
                             <span class="{{ Route::is('guru') ? 'font-bold' : 'font-medium' }}">Data Guru</span>
+                        </a>
+                        <a href="/walas"
+                            class="flex items-center px-4 py-3 rounded-lg transition-colors
+                        {{ Route::is('walas') ? 'bg-white/90 text-[#37517e]' : 'text-gray-300 hover:bg-white/10 hover:text-white' }}">
+                            <i data-lucide="user-cog"
+                                class="w-5 h-5 mr-3 {{ Route::is('walas') ? 'fill-[#37517e]/20 stroke-[#37517e]' : '' }}"
+                                @if (Route::is('walas')) stroke-width="3" @endif>
+                            </i>
+                            <span class="{{ Route::is('walas') ? 'font-bold' : 'font-medium' }}">Data Walas</span>
                         </a>
 
                         <a href="/user"
@@ -188,7 +206,7 @@
                     <div
                         class="p-2 rounded-full transition-colors
             {{ Request::is('user*') ? 'bg-[#37517e] text-white' : 'bg-blue-100 text-[#37517e]' }}">
-                        <i data-lucide="user-cog" class="w-5 h-5"></i>
+                        <i data-lucide="book-user" class="w-5 h-5"></i>
                     </div>
 
                     <span
@@ -219,22 +237,22 @@
                 </a>
 
                 {{-- MENU MAPEL --}}
-                <a href="/mapel"
+                <a href="/walas"
                     class="flex flex-col items-center gap-2 p-3 rounded-xl active:scale-95 transition-all border
-        {{ Request::is('mapel*')
+        {{ Request::is('walas*')
             ? 'bg-blue-50 border-[#37517e]/30 shadow-sm'
             : 'bg-gray-50 border-transparent hover:bg-gray-100' }}">
 
                     <div
                         class="p-2 rounded-full transition-colors
-            {{ Request::is('mapel*') ? 'bg-[#37517e] text-white' : 'bg-blue-100 text-[#37517e]' }}">
-                        <i data-lucide="book-open" class="w-5 h-5"></i>
+            {{ Request::is('walas*') ? 'bg-[#37517e] text-white' : 'bg-blue-100 text-[#37517e]' }}">
+                        <i data-lucide="user-cog" class="w-5 h-5"></i>
                     </div>
 
                     <span
                         class="text-[10px] transition-colors
-            {{ Request::is('mapel*') ? 'font-bold text-[#37517e]' : 'font-semibold text-gray-600' }}">
-                        Mapel
+            {{ Request::is('walas*') ? 'font-bold text-[#37517e]' : 'font-semibold text-gray-600' }}">
+                        Walas
                     </span>
                 </a>
 

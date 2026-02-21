@@ -708,7 +708,8 @@ document.addEventListener("alpine:init", () => {
         users: initialUsers,
 
         get filteredUsers() {
-            let result = this.users;
+            let result = [...this.users];
+
             if (this.search !== "") {
                 const q = this.search.toLowerCase();
                 result = result.filter(
@@ -783,7 +784,16 @@ document.addEventListener("alpine:init", () => {
                 delete: "Tindakan ini permanen. User tidak akan bisa login kembali.",
             }[this.drawerMode];
         },
-
+        sortBy(col) {
+            if (this.sortCol === col) {
+                this.sortAsc = !this.sortAsc;
+            } else {
+                this.sortCol = col;
+                this.sortAsc = true;
+            }
+            // Reset ke halaman pertama setiap kali sorting diubah
+            this.currentPage = 1;
+        },
         openDrawer(mode, user = null) {
             this.drawerMode = mode;
             this.showPassword = false; // Reset tampilan password setiap buka drawer
@@ -883,18 +893,23 @@ document.addEventListener("alpine:init", () => {
             }
         },
 
+        updateRows() {
+            this.currentPage = 1;
+        },
+
+        // PERBAIKAN: Gunakan $watch 'paginatedUsers' agar ikon selalu ter-render saat tampilannya diubah
         init() {
-            this.$watch("currentPage", () =>
-                this.$nextTick(() => lucide.createIcons()),
-            );
+            this.$watch("paginatedUsers", () => {
+                setTimeout(() => lucide.createIcons(), 50);
+            });
+            this.$watch("drawerOpen", () => {
+                setTimeout(() => lucide.createIcons(), 50);
+            });
             this.$watch("search", () => {
                 this.currentPage = 1;
-                this.$nextTick(() => lucide.createIcons());
             });
-            this.$watch("drawerOpen", () =>
-                this.$nextTick(() => lucide.createIcons()),
-            );
-            this.$nextTick(() => lucide.createIcons());
+
+            setTimeout(() => lucide.createIcons(), 50);
         },
     }));
 });

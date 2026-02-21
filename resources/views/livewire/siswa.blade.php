@@ -90,12 +90,30 @@
                                 this.previewOpen = true;
                                 e.target.value = '';
                             } else {
-                                alert(data.error);
+                                // Ganti alert dengan Toaster Error
+                                Swal.fire({
+                                    toast: true,
+                                    position: 'top-end',
+                                    icon: 'error',
+                                    title: data.error,
+                                    showConfirmButton: false,
+                                    timer: 3000,
+                                    timerProgressBar: true
+                                });
                             }
                         })
                         .catch(err => {
                             this.isImporting = false;
-                            alert('Terjadi kesalahan saat membaca file.');
+                            // Ganti alert dengan Toaster Error
+                            Swal.fire({
+                                toast: true,
+                                position: 'top-end',
+                                icon: 'error',
+                                title: 'Terjadi kesalahan saat membaca file.',
+                                showConfirmButton: false,
+                                timer: 3000,
+                                timerProgressBar: true
+                            });
                         });
                 },
                 confirmImport() {
@@ -112,15 +130,47 @@
                         .then(data => {
                             this.isLoading = false;
                             if (data.success) {
-                                alert(data.success);
-                                window.location.reload();
+                                // Tampilkan Toaster Sukses
+                                Swal.fire({
+                                    toast: true,
+                                    position: 'top-end',
+                                    icon: 'success',
+                                    title: data.success,
+                                    showConfirmButton: false,
+                                    timer: 2000, // Tampil selama 2 detik
+                                    timerProgressBar: true
+                                });
+            
+                                // Beri jeda 2 detik agar toaster terlihat, baru reload halaman
+                                setTimeout(() => {
+                                    window.location.reload();
+                                }, 2000);
+            
                             } else {
-                                alert(data.error);
+                                // Ganti alert dengan Toaster Error
+                                Swal.fire({
+                                    toast: true,
+                                    position: 'top-end',
+                                    icon: 'error',
+                                    title: data.error,
+                                    showConfirmButton: false,
+                                    timer: 3000,
+                                    timerProgressBar: true
+                                });
                             }
                         })
                         .catch(err => {
                             this.isLoading = false;
-                            alert('Gagal menyimpan data batch.');
+                            // Ganti alert dengan Toaster Error
+                            Swal.fire({
+                                toast: true,
+                                position: 'top-end',
+                                icon: 'error',
+                                title: 'Gagal menyimpan data batch.',
+                                showConfirmButton: false,
+                                timer: 3000,
+                                timerProgressBar: true
+                            });
                         });
                 }
             }" class="relative group w-full md:w-auto z-20" @click.outside="open = false">

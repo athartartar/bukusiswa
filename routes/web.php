@@ -15,6 +15,8 @@ use App\Livewire\Pelanggaran;
 use App\Http\Controllers\PelanggaranController;
 use App\Livewire\Kelas;
 use App\Http\Controllers\KelasController;
+use App\Livewire\PlotWalas;
+use App\Http\Controllers\PlotWalasController;
 
 
 Route::get('/', function () {
@@ -42,6 +44,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/kelas', Kelas::class)->name('kelas');
     Route::post('/kelas/store', [KelasController::class, 'store'])->name('kelas.store');
     Route::delete('/kelas/{id}', [KelasController::class, 'destroy'])->name('kelas.destroy');
+    Route::get('/plot-walas', PlotWalas::class)->name('plot-walas');
+    Route::post('/plot-walas/store', [PlotWalasController::class, 'store'])->name('plot-walas.store');
+    Route::delete('/plot-walas/{id}', [PlotWalasController::class, 'destroy'])->name('plot-walas.destroy');
     Route::get('/profile', Profile::class)->name('profile');
     Route::get('/user', User::class)->name('user');
     Route::post('/user/store', [UserController::class, 'store'])->name('user.store');

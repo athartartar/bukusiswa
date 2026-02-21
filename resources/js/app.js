@@ -678,6 +678,238 @@ document.addEventListener("alpine:init", () => {
     );
 });
 
+//plot-walas tabel
+document.addEventListener("alpine:init", () => {
+    Alpine.data(
+        "walasData",
+        (initialPlots, gurus, kelases, routeStore, csrfToken) => ({
+            search: "",
+            rowsPerPage: 5,
+            currentPage: 1,
+            drawerOpen: false,
+            drawerMode: "add",
+            sortCol: "namaguru",
+            sortAsc: true,
+            isLoading: false,
+
+            plots: initialPlots,
+            listGuru: gurus,
+            listKelas: kelases,
+
+            formData: {
+                id: null,
+                id_guru: "",
+                id_kelas: "",
+                namaguru: "", // Hanya untuk display saat delete
+                kode_kelas: "", // Hanya untuk display saat delete
+            },
+
+            // Helper untuk memunculkan teks di Dropdown
+            get guruLabel() {
+                let g = this.listGuru.find(
+                    (x) => x.id_guru === this.formData.id_guru,
+                );
+                return g ? g.namaguru : "Pilih Guru...";
+            },
+            get kelasLabel() {
+                let k = this.listKelas.find(
+                    (x) => x.id_kelas === this.formData.id_kelas,
+                );
+                return k ? k.kode_kelas : "Pilih Kelas...";
+            },
+
+            get filteredData() {
+                let result = this.plots;
+                if (this.search !== "") {
+                    const q = this.search.toLowerCase();
+                    result = result.filter(
+                        (p) =>
+                            p.namaguru.toLowerCase().includes(q) ||
+                            p.kode_kelas.toLowerCase().includes(q),
+                    );
+                }
+                result = result.sort((a, b) => {
+                    let valA = a[this.sortCol].toString().toLowerCase();
+                    let valB = b[this.sortCol].toString().toLowerCase();
+                    if (valA < valB) return this.sortAsc ? -1 : 1;
+                    if (valA > valB) return this.sortAsc ? 1 : -1;
+                    return 0;
+                });
+                return result;
+            },
+            get totalPages() {
+                return Math.ceil(this.filteredData.length / this.rowsPerPage);
+            },
+            get paginatedData() {
+                let start = (this.currentPage - 1) * this.rowsPerPage;
+                return this.filteredData.slice(start, start + this.rowsPerPage);
+            },
+            get pageNumbers() {
+                let pages = [];
+                let total = this.totalPages;
+                let current = this.currentPage;
+                if (total <= 7) {
+                    for (let i = 1; i <= total; i++) pages.push(i);
+                } else {
+                    if (current <= 4) pages = [1, 2, 3, 4, 5, "...", total];
+                    else if (current >= total - 3)
+                        pages = [
+                            1,
+                            "...",
+                            total - 4,
+                            total - 3,
+                            total - 2,
+                            total - 1,
+                            total,
+                        ];
+                    else
+                        pages = [
+                            1,
+                            "...",
+                            current - 1,
+                            current,
+                            current + 1,
+                            "...",
+                            total,
+                        ];
+                }
+                return pages;
+            },
+            get drawerTitle() {
+                if (this.drawerMode === "add") return "Tambah Wali Kelas";
+                if (this.drawerMode === "edit") return "Edit Wali Kelas";
+                return "Konfirmasi Hapus";
+            },
+
+            sortBy(col) {
+                if (this.sortCol === col) this.sortAsc = !this.sortAsc;
+                else {
+                    this.sortCol = col;
+                    this.sortAsc = true;
+                }
+            },
+            updateRows() {
+                this.currentPage = 1;
+            },
+
+            openDrawer(mode, item = null) {
+                this.drawerMode = mode;
+                if (mode === "add") {
+                    this.formData = {
+                        id: null,
+                        id_guru: "",
+                        id_kelas: "",
+                        namaguru: "",
+                        kode_kelas: "",
+                    };
+                } else {
+                    this.formData = { ...item };
+                }
+                this.drawerOpen = true;
+            },
+
+            async saveData() {
+                this.isLoading = true;
+                try {
+                    let response = await fetch(routeStore, {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "X-CSRF-TOKEN": csrfToken,
+                            Accept: "application/json",
+                        },
+                        body: JSON.stringify(this.formData),
+                    });
+                    let result = await response.json();
+                    if (!response.ok) {
+                        // Cek jika error validasi (Misal: kelas sudah punya walas)
+                        let errorMsg = result.message || "Gagal menyimpan data";
+                        if (result.errors && result.errors.id_kelas)
+                            errorMsg = result.errors.id_kelas[0];
+                        throw new Error(errorMsg);
+                    }
+
+                    // Gunakan Swal/Toast milikmu di sini (saya asumsikan variabel Toast sudah ada)
+                    Swal.fire({
+                        toast: true,
+                        position: "top-end",
+                        icon: "success",
+                        title: "Berhasil disimpan",
+                        showConfirmButton: false,
+                        timer: 1500,
+                    }).then(() => location.reload());
+                } catch (error) {
+                    Swal.fire({
+                        toast: true,
+                        position: "top-end",
+                        icon: "error",
+                        title: error.message,
+                        showConfirmButton: false,
+                        timer: 2000,
+                    });
+                } finally {
+                    this.isLoading = false;
+                }
+            },
+
+            async deleteData() {
+                this.isLoading = true;
+                try {
+                    let response = await fetch(
+                        "/plot-walas/" + this.formData.id,
+                        {
+                            method: "DELETE",
+                            headers: {
+                                "Content-Type": "application/json",
+                                "X-CSRF-TOKEN": csrfToken,
+                            },
+                        },
+                    );
+                    if (!response.ok) throw new Error("Gagal menghapus data");
+                    Swal.fire({
+                        toast: true,
+                        position: "top-end",
+                        icon: "success",
+                        title: "Data dihapus",
+                        showConfirmButton: false,
+                        timer: 1500,
+                    }).then(() => location.reload());
+                } catch (error) {
+                    Swal.fire({
+                        toast: true,
+                        position: "top-end",
+                        icon: "error",
+                        title: "Gagal menghapus data",
+                        showConfirmButton: false,
+                        timer: 2000,
+                    });
+                } finally {
+                    this.isLoading = false;
+                }
+            },
+
+            init() {
+                this.$watch("paginatedData", () => {
+                    setTimeout(
+                        () =>
+                            typeof lucide !== "undefined" &&
+                            lucide.createIcons(),
+                        50,
+                    );
+                });
+                this.$watch("drawerOpen", () => {
+                    setTimeout(
+                        () =>
+                            typeof lucide !== "undefined" &&
+                            lucide.createIcons(),
+                        50,
+                    );
+                });
+            },
+        }),
+    );
+});
+
 // user tabel
 document.addEventListener("alpine:init", () => {
     const Toast = Swal.mixin({

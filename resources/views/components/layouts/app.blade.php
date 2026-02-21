@@ -69,14 +69,14 @@
                             </i>
                             <span class="{{ Route::is('guru') ? 'font-bold' : 'font-medium' }}">Data Guru</span>
                         </a>
-                        <a href="/walas"
+                        <a href="/plot-walas"
                             class="flex items-center px-4 py-3 rounded-lg transition-colors
-                        {{ Route::is('walas') ? 'bg-white/90 text-[#37517e]' : 'text-gray-300 hover:bg-white/10 hover:text-white' }}">
+                        {{ Route::is('plot-walas') ? 'bg-white/90 text-[#37517e]' : 'text-gray-300 hover:bg-white/10 hover:text-white' }}">
                             <i data-lucide="user-cog"
-                                class="w-5 h-5 mr-3 {{ Route::is('walas') ? 'fill-[#37517e]/20 stroke-[#37517e]' : '' }}"
-                                @if (Route::is('walas')) stroke-width="3" @endif>
+                                class="w-5 h-5 mr-3 {{ Route::is('plot-walas') ? 'fill-[#37517e]/20 stroke-[#37517e]' : '' }}"
+                                @if (Route::is('plot-walas')) stroke-width="3" @endif>
                             </i>
-                            <span class="{{ Route::is('walas') ? 'font-bold' : 'font-medium' }}">Data Walas</span>
+                            <span class="{{ Route::is('plot-walas') ? 'font-bold' : 'font-medium' }}">Data Walas</span>
                         </a>
 
                         <a href="/user"
@@ -237,21 +237,21 @@
                 </a>
 
                 {{-- MENU MAPEL --}}
-                <a href="/walas"
+                <a href="/plot-walas"
                     class="flex flex-col items-center gap-2 p-3 rounded-xl active:scale-95 transition-all border
-        {{ Request::is('walas*')
+        {{ Request::is('plot-walas*')
             ? 'bg-blue-50 border-[#37517e]/30 shadow-sm'
             : 'bg-gray-50 border-transparent hover:bg-gray-100' }}">
 
                     <div
                         class="p-2 rounded-full transition-colors
-            {{ Request::is('walas*') ? 'bg-[#37517e] text-white' : 'bg-blue-100 text-[#37517e]' }}">
+            {{ Request::is('plot-walas*') ? 'bg-[#37517e] text-white' : 'bg-blue-100 text-[#37517e]' }}">
                         <i data-lucide="user-cog" class="w-5 h-5"></i>
                     </div>
 
                     <span
                         class="text-[10px] transition-colors
-            {{ Request::is('walas*') ? 'font-bold text-[#37517e]' : 'font-semibold text-gray-600' }}">
+            {{ Request::is('plot-walas*') ? 'font-bold text-[#37517e]' : 'font-semibold text-gray-600' }}">
                         Walas
                     </span>
                 </a>

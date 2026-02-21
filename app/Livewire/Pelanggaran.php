@@ -18,8 +18,6 @@ class Pelanggaran extends Component
     public $poin;
     public $keterangan;
     public $bukti_foto;
-    
-    // User info
     public $usertype;
     public $currentSiswaId = null;
 
@@ -28,11 +26,10 @@ class Pelanggaran extends Component
         if (!Auth::check()) {
             return redirect('/login');
         }
-        
+
         $user = Auth::user();
         $this->usertype = $user->usertype ?? 'guest';
-        
-        // Jika usertype siswa, ambil id_siswa mereka
+
         if ($this->usertype === 'siswa') {
             $siswa = SiswaModel::where('id_user', $user->id)->first();
             if ($siswa) {
@@ -50,13 +47,16 @@ class Pelanggaran extends Component
             'poin' => 'required|numeric',
         ]);
 
+        $user = Auth::user();
+        $dicatatOleh = $user->namalengkap ?? $user->name ?? 'admin';
+
         PelanggaranModel::create([
             'id_siswa' => $this->id_siswa,
             'tanggal' => $this->tanggal,
             'jenis_pelanggaran' => $this->jenis_pelanggaran,
             'poin' => $this->poin,
             'keterangan' => $this->keterangan,
-            'dicatat_oleh' => Auth::user()->name ?? 'admin'
+            'dicatat_oleh' => $dicatatOleh,
         ]);
 
         session()->flash('success', 'Pelanggaran berhasil ditambahkan');
@@ -66,64 +66,69 @@ class Pelanggaran extends Component
             'tanggal',
             'jenis_pelanggaran',
             'poin',
-            'keterangan'
+            'keterangan',
         ]);
     }
 
-public function render()
+    public function render()
     {
         $user = Auth::user();
         $usertype = $user->usertype ?? 'guest';
-        
-        // 1. Logika untuk SISWA
+
         if ($usertype === 'siswa') {
-            // Cari data siswa berdasarkan ID User yang login
             $siswa = SiswaModel::where('id_user', $user->id)->first();
-            
+
             if ($siswa) {
-                // FIXED: Gunakan 'pelanggarans.id_siswa' agar tidak error Ambiguous
                 $data = PelanggaranModel::query()
                     ->select(
                         'pelanggarans.*',
                         'siswas.namalengkap as nama_siswa',
-                        'siswas.kelas'
+                        'siswas.kelas',
+                        \DB::raw('COALESCE(users.namalengkap, pelanggarans.dicatat_oleh) as nama_pencatat')
                     )
                     ->join('siswas', 'pelanggarans.id_siswa', '=', 'siswas.id_siswa')
-                    ->where('pelanggarans.id_siswa', $siswa->id_siswa) // <--- PENTING: Spesifik tabel
+                    ->leftJoin('users', \DB::raw('users.namalengkap COLLATE utf8mb4_unicode_ci'), '=', \DB::raw('pelanggarans.dicatat_oleh COLLATE utf8mb4_unicode_ci'))
+                    ->where('pelanggarans.id_siswa', $siswa->id_siswa)
                     ->orderBy('id_pelanggaran', 'desc')
-                    ->get();
+                    ->get()
+                    ->map(function ($item) {
+                        $item->dicatat_oleh = $item->nama_pencatat;
+                        return $item;
+                    });
 
-                // Dropdown hanya berisi diri sendiri
                 $students = collect([
-                    (object)[
+                    (object) [
                         'id' => $siswa->id_siswa,
                         'name' => $siswa->namalengkap,
                         'class' => $siswa->kelas,
                         'nis' => $siswa->nis,
-                        'total_poin' => PelanggaranModel::where('id_siswa', $siswa->id_siswa)->sum('poin')
+                        'total_poin' => PelanggaranModel::where('id_siswa', $siswa->id_siswa)->sum('poin'),
                     ]
                 ]);
             } else {
-                // User login sebagai siswa, tapi datanya tidak ada di tabel siswas
                 $students = collect([]);
                 $data = collect([]);
             }
-        } 
-        // 2. Logika untuk ADMIN / GURU
-        else {
+        } else {
             $data = PelanggaranModel::join('siswas', 'pelanggarans.id_siswa', '=', 'siswas.id_siswa')
+                ->leftJoin('users', \DB::raw('users.namalengkap COLLATE utf8mb4_unicode_ci'), '=', \DB::raw('pelanggarans.dicatat_oleh COLLATE utf8mb4_unicode_ci'))
                 ->select(
                     'pelanggarans.*',
                     'siswas.namalengkap as nama_siswa',
-                    'siswas.kelas'
+                    'siswas.kelas',
+                    \DB::raw('COALESCE(users.namalengkap, pelanggarans.dicatat_oleh) as nama_pencatat')
                 )
                 ->orderBy('id_pelanggaran', 'desc')
-                ->get();
+                ->get()
+                ->map(function ($item) {
+                    $item->dicatat_oleh = $item->nama_pencatat;
+                    return $item;
+                });
 
             $students = SiswaModel::select('id_siswa as id', 'namalengkap as name', 'kelas as class', 'nis')
                 ->orderBy('namalengkap')
                 ->get()
-                ->map(function($student) {
+                ->map(function ($student) {
                     $student->total_poin = PelanggaranModel::where('id_siswa', $student->id)->sum('poin');
                     return $student;
                 });
@@ -133,7 +138,7 @@ public function render()
             'data' => $data,
             'students' => $students,
             'usertype' => $usertype,
-            'currentSiswaId' => $this->currentSiswaId
+            'currentSiswaId' => $this->currentSiswaId,
         ]);
     }
 }

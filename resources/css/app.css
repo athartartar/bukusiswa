@@ -42,5 +42,5 @@ body {
 
 #footbar {
     opacity: 0;
-    transform: translateY(50px); /* posisi awal turun */
+    transform: translateY(50px);
 }

@@ -8,11 +8,10 @@ class Pelanggaran extends Model
 {
     protected $table = 'pelanggarans';
     protected $primaryKey = 'id_pelanggaran';
-    
-    // Gunakan timestamps Laravel default
+
     const CREATED_AT = 'created_at';
-    const UPDATED_AT = null; // Jika tidak ada updated_at
-    
+    const UPDATED_AT = null;
+
     protected $fillable = [
         'id_siswa',
         'tanggal',
@@ -27,10 +26,7 @@ class Pelanggaran extends Model
     {
         return $this->belongsTo(Siswa::class, 'id_siswa', 'id_siswa');
     }
-    
-    /**
-     * Accessor untuk URL foto bukti
-     */
+
     public function getBuktiFotoUrlAttribute()
     {
         if ($this->bukti_foto) {
@@ -38,6 +34,9 @@ class Pelanggaran extends Model
         }
         return null;
     }
+    
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'dicatat_oleh', 'username');
+    }
 }
-
-// ini modelsnya

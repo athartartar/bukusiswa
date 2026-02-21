@@ -16,5 +16,6 @@ class Siswa extends Model
         'namalengkap',
         'jeniskelamin',
         'kelas',
+        'id_user'
     ];
 }

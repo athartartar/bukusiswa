@@ -20,11 +20,11 @@ class PelanggaranController extends Controller
             'bukti_foto' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120',
         ]);
 
-        $dicatatOleh = 'guest'; // Default jika tidak login
+        $dicatatOleh = 'guest'; 
 
         if (Auth::check()) {
             $user = Auth::user();
-            // Gunakan name atau username atau email
+            
             $dicatatOleh = $user->namalengkap ?? $user->username ?? 'admin';
         }
 
@@ -59,11 +59,9 @@ class PelanggaranController extends Controller
     {
         $user = Auth::user();
 
-        // Jika usertype siswa, hanya bisa lihat riwayat dirinya sendiri
         if ($user && strtolower(trim($user->usertype)) === 'siswa') {
             $siswa = Siswa::where('id_user', $user->id_user)->first();
 
-            // Jika data siswa tidak ditemukan atau ID tidak cocok, tolak akses
             if (!$siswa || $siswa->id_siswa != $id_siswa) {
                 return response()->json([
                     'success' => false,

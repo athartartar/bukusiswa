@@ -1079,7 +1079,6 @@ document.addEventListener("alpine:init", () => {
     }));
 });
 
-// Pelanggaran System - FINAL dengan Delete & Siswa Restriction
 document.addEventListener("alpine:init", () => {
     const Toast = Swal.mixin({
         toast: true,
@@ -1089,8 +1088,8 @@ document.addEventListener("alpine:init", () => {
         timerProgressBar: true,
     });
 
-    Alpine.data("siswaData", (initialStudents, routeStore, csrfToken, usertype, currentSiswaId) => ({
-        // ================= STATE =================
+    Alpine.data("pelanggaranData", (initialStudents, routeStore, csrfToken, usertype, currentSiswaId) => ({
+        
         search: "",
         rowsPerPage: 8,
         currentPage: 1,
@@ -1105,11 +1104,10 @@ document.addEventListener("alpine:init", () => {
         selectedStudent: null,
         riwayatList: [],
         
-        // User info
+        
         usertype: usertype || 'guest',
         currentSiswaId: currentSiswaId || null,
         
-        // Filter Kelas & Sort
         filterKelas: '',
         sortByPoin: '',
 
@@ -1449,7 +1447,7 @@ document.addEventListener("alpine:init", () => {
                 this.loadRiwayat(student.id);
             }
 
-            if (mode === "edit") {
+            if (mode === "edit" || mode === "delete") {
                 this.formData = { ...student };
             }
 

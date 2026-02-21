@@ -30,15 +30,12 @@ class Pelanggaran extends Component
         }
 
         $user = Auth::user();
-        // Pastikan usertype selalu huruf kecil agar pengecekan tidak gagal
         $this->usertype = strtolower(trim($user->usertype ?? 'guest'));
 
-        // Jika usertype siswa, ambil id_siswa mereka
         if ($this->usertype === 'siswa') {
             $siswa = SiswaModel::where('id_user', $user->id_user)->first();
             if ($siswa) {
                 $this->currentSiswaId = $siswa->id_siswa;
-                // Opsional: Langsung set form id_siswa ke id dia sendiri
                 $this->id_siswa = $siswa->id_siswa;
             }
         }
@@ -76,15 +73,12 @@ class Pelanggaran extends Component
     public function render()
     {
         $user = Auth::user();
-        // Membersihkan spasi dan memaksa huruf kecil agar validasi akurat
         $usertype = strtolower(trim($user->usertype ?? 'guest'));
 
         $data = [];
         $students = [];
 
-        // 1. JIKA USER ADALAH SISWA
         if ($usertype === 'siswa') {
-            // Gunakan $user->id
             $siswa = SiswaModel::where('id_user', $user->id_user)->first();
 
             if ($siswa) {
@@ -95,11 +89,10 @@ class Pelanggaran extends Component
                         'siswas.kelas'
                     )
                     ->join('siswas', 'pelanggarans.id_siswa', '=', 'siswas.id_siswa')
-                    ->where('pelanggarans.id_siswa', $siswa->id_siswa) // Pastikan filter ID Siswa jalan
+                    ->where('pelanggarans.id_siswa', $siswa->id_siswa) 
                     ->orderBy('id_pelanggaran', 'desc')
                     ->get();
 
-                // Dropdown hanya berisi diri sendiri
                 $students = collect([
                     (object)[
                         'id' => $siswa->id_siswa,
@@ -110,12 +103,10 @@ class Pelanggaran extends Component
                     ]
                 ]);
             } else {
-                // User login sebagai siswa, tapi datanya tidak ada di tabel siswas
                 $data = collect([]);
                 $students = collect([]);
             }
         }
-        // 2. JIKA USER ADALAH ADMIN / GURU
         else {
             $data = PelanggaranModel::join('siswas', 'pelanggarans.id_siswa', '=', 'siswas.id_siswa')
                 ->select(

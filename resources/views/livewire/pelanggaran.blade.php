@@ -1,4 +1,4 @@
-<div x-data='siswaData(
+<div x-data='pelanggaranData(
     @json($students),
     "{{ route('pelanggaran.store') }}",
     "{{ csrf_token() }}",

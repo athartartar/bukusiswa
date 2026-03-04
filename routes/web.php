@@ -39,6 +39,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/siswa/preview', [SiswaController::class, 'previewImport'])->name('siswa.preview');
     Route::post('/siswa/store-batch', [SiswaController::class, 'storeBatch'])->name('siswa.storeBatch');
     Route::get('/guru', Guru::class)->name('guru');
+    Route::post('/save-token', [UserController::class, 'saveToken'])->name('saveToken');
     Route::post('/guru/store', [GuruController::class, 'store'])->name('guru.store');
     Route::delete('/guru/{id}', [GuruController::class, 'destroy'])->name('guru.destroy');
     Route::get('/kelas', Kelas::class)->name('kelas');

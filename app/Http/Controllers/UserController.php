@@ -26,7 +26,7 @@ class UserController extends Controller
         ];
 
         if ($request->password) {
-            $data['password'] = $request->password; 
+            $data['password'] = $request->password;
         }
 
         if ($request->hasFile('foto')) {
@@ -52,5 +52,12 @@ class UserController extends Controller
         return response()->json([
             'success' => 'User berhasil dihapus!'
         ]);
+    }
+    public function saveToken(\Illuminate\Http\Request $request)
+    {
+        $user = \Illuminate\Support\Facades\Auth::user();
+        $user->update(['fcm_token' => $request->token]);
+
+        return response()->json(['message' => 'Token berhasil disimpan ke database!']);
     }
 }

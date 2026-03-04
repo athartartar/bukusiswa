@@ -7,9 +7,13 @@ use App\Models\Pelanggaran;
 use App\Models\Siswa;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Kreait\Firebase\Factory;
+use Kreait\Firebase\Messaging\CloudMessage;
+use Kreait\Firebase\Messaging\Notification;
 
 class PelanggaranController extends Controller
 {
+    private static $notifSudahTerkirim = false;
     public function store(Request $request)
     {
         $request->validate([
@@ -20,13 +24,7 @@ class PelanggaranController extends Controller
             'bukti_foto' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120',
         ]);
 
-        $dicatatOleh = 'guest'; 
-
-        if (Auth::check()) {
-            $user = Auth::user();
-            
-            $dicatatOleh = $user->namalengkap ?? $user->username ?? 'admin';
-        }
+        $dicatatOleh = Auth::check() ? (Auth::user()->namalengkap ?? Auth::user()->username) : 'admin';
 
         $data = [
             'id_siswa' => $request->id_siswa,
@@ -38,23 +36,72 @@ class PelanggaranController extends Controller
         ];
 
         if ($request->hasFile('bukti_foto')) {
-            $file = $request->file('bukti_foto');
-            $fileName = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
-            $path = $file->storeAs('bukti', $fileName, 'public');
-            $data['bukti_foto'] = $path;
+            $data['bukti_foto'] = $request->file('bukti_foto')->store('bukti', 'public');
         }
 
+        // 1. Simpan Pelanggaran
         $pelanggaran = Pelanggaran::create($data);
 
-        $this->updateTotalPoin($request->id_siswa);
+        // 2. Update Total Poin
+        $totalPoin = $this->updateTotalPoin($request->id_siswa);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Pelanggaran berhasil disimpan',
-            'data' => $pelanggaran
-        ], 201);
+        $is_last = $request->input('is_last', 0);
+
+        // PASANG CCTV: Catat di log setiap kali data masuk
+        \Log::info("Data masuk: {$request->jenis_pelanggaran} | is_last nilainya: {$is_last}");
+
+        // 3. JIKA INI REQUEST TERAKHIR
+        if ($is_last == 1 || $is_last == '1') {
+
+            $siswa = Siswa::find($request->id_siswa);
+            $targetRole = $totalPoin < 20 ? 'walas' : 'bk';
+            $tokens = \App\Models\User::where('usertype', $targetRole)->whereNotNull('fcm_token')->pluck('fcm_token')->toArray();
+
+            \Log::info("Mencoba kirim notif ke Role: {$targetRole}. Jumlah Token HP yg aktif: " . count($tokens));
+
+            if (count($tokens) > 0) {
+                $this->kirimNotifKeRole($tokens, $siswa->namalengkap, $totalPoin, $targetRole);
+                \Log::info("Notif berhasil ditembakkan ke Firebase!");
+            }
+
+            // Kirim paket SweetAlert khusus di request terakhir
+            return response()->json([
+                'success' => true,
+                'swal_konfirmasi' => [
+                    'title' => 'Tercatat!',
+                    'text'  => "Total {$totalPoin} Poin Pelanggaran telah masuk ke sistem.",
+                    'icon'  => 'success'
+                ]
+            ], 201);
+        }
+
+        // Kalau bukan request terakhir, kirim sukses biasa
+        return response()->json(['success' => true], 201);
     }
+    private function kirimNotifDenganJeda($id_siswa)
+    {
+        $lockKey = 'notif_execution_lock_' . $id_siswa;
 
+        // Jika tidak sedang dalam proses "menunggu", buat proses baru
+        if (!\Illuminate\Support\Facades\Cache::has($lockKey)) {
+            \Illuminate\Support\Facades\Cache::put($lockKey, true, 2); // Lock 2 detik
+
+            // Beri jeda 1 detik agar semua request Livewire masuk dulu ke database
+            usleep(1000000);
+
+            $data = \Illuminate\Support\Facades\Cache::get('pending_notif_' . $id_siswa);
+            if ($data) {
+                $tokens = \App\Models\User::where('usertype', $data['role'])
+                    ->whereNotNull('fcm_token')->pluck('fcm_token')->toArray();
+
+                if (count($tokens) > 0) {
+                    $this->kirimNotifKeRole($tokens, $data['nama'], $data['total'], $data['role']);
+                }
+                \Illuminate\Support\Facades\Cache::forget('pending_notif_' . $id_siswa);
+            }
+            \Illuminate\Support\Facades\Cache::forget($lockKey);
+        }
+    }
     public function riwayat($id_siswa)
     {
         $user = Auth::user();
@@ -97,6 +144,7 @@ class PelanggaranController extends Controller
     {
         try {
             $siswa = Siswa::where('id_siswa', $id_siswa)->first();
+            $totalPoin = 0;
 
             if ($siswa) {
                 $totalPoin = Pelanggaran::where('id_siswa', $id_siswa)->sum('poin');
@@ -105,8 +153,42 @@ class PelanggaranController extends Controller
                     $siswa->update(['total_poin' => $totalPoin]);
                 }
             }
+
+            // Return total poin agar bisa dicek di method store
+            return $totalPoin;
         } catch (\Exception $e) {
             \Log::info('Total poin tidak diupdate: ' . $e->getMessage());
+            return 0;
+        }
+    }
+
+    // Fungsi khusus untuk mengirim Notifikasi FCM
+    private function kirimNotifKeRole($tokens, $namaSiswa, $totalPoin, $targetRole)
+    {
+        try {
+            $credentialsPath = base_path(env('FIREBASE_CREDENTIALS', 'storage/app/firebase-auth.json'));
+
+            if (!file_exists($credentialsPath)) {
+                return;
+            }
+
+            $firebase = (new Factory)->withServiceAccount($credentialsPath);
+            $messaging = $firebase->createMessaging();
+
+            $roleLabel = strtoupper($targetRole);
+
+            // 1. Buat pesannya DULU pakai CloudMessage biasa (tanpa masukin token di sini)
+            $message = CloudMessage::fromArray([
+                'notification' => [
+                    'title' => "🚨 Peringatan Murid ({$roleLabel})",
+                    'body'  => "Murid {$namaSiswa} telah mencapai {$totalPoin} poin pelanggaran.",
+                ],
+            ]);
+
+            // 2. Tembakkan pesan tersebut ke banyak token sekaligus pakai sendMulticast
+            $messaging->sendMulticast($message, $tokens);
+        } catch (\Throwable $e) {
+            \Log::error('Gagal kirim notif FCM ke role: ' . $e->getMessage());
         }
     }
 

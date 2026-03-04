@@ -2105,17 +2105,31 @@ document.addEventListener("alpine:init", () => {
                 this.isLoading = true;
 
                 try {
-                    const promises = [];
+                    const keys = Object.keys(this.selectedPelanggaran);
+                    const totalItems = keys.length;
+                    let lastResponseData = null;
+                    let allSuccess = true;
 
-                    for (let pelanggaranId in this.selectedPelanggaran) {
+                    // KUNCI UTAMA: Pake await di dalam loop agar request ngantri satu per satu
+                    for (let i = 0; i < totalItems; i++) {
+                        let pelanggaranId = keys[i];
                         const pelanggaran =
                             this.selectedPelanggaran[pelanggaranId];
+                        const isLastItem = i === totalItems - 1;
+
+                        // TAMBAHAN LOG UNTUK BUKTI DI LAPTOP
+                        console.log(
+                            `Mengirim: ${pelanggaran.jenis} | Apakah Terakhir? ${isLastItem ? "YA (1)" : "BUKAN (0)"}`,
+                        );
 
                         const formData = new FormData();
                         formData.append("id_siswa", this.selectedStudent.id);
                         formData.append("jenis_pelanggaran", pelanggaran.jenis);
                         formData.append("poin", pelanggaran.poin);
                         formData.append("keterangan", this.keteranganTambahan);
+
+                        // Kirim indikator (1 untuk terakhir, 0 untuk lainnya)
+                        formData.append("is_last", isLastItem ? "1" : "0");
 
                         if (this.photoFiles[pelanggaranId]) {
                             formData.append(
@@ -2124,7 +2138,8 @@ document.addEventListener("alpine:init", () => {
                             );
                         }
 
-                        const promise = fetch("/pelanggaran/store", {
+                        // Tunggu sampai 1 data ini sukses tersimpan, baru lanjut ke data berikutnya
+                        const response = await fetch("/pelanggaran/store", {
                             method: "POST",
                             headers: {
                                 "X-CSRF-TOKEN": csrfToken,
@@ -2132,19 +2147,36 @@ document.addEventListener("alpine:init", () => {
                             body: formData,
                         });
 
-                        promises.push(promise);
+                        if (!response.ok) {
+                            allSuccess = false;
+                            break; // Berhenti kalau ada yang error
+                        }
+
+                        // Kalau ini request terakhir, simpan respon json-nya untuk SweetAlert
+                        if (isLastItem) {
+                            lastResponseData = await response.json();
+                        }
                     }
-
-                    const results = await Promise.all(promises);
-
-                    const allSuccess = results.every((res) => res.ok);
 
                     if (allSuccess) {
                         this.drawerOpen = false;
-                        Toast.fire({
-                            icon: "success",
-                            title: `${promises.length} pelanggaran berhasil disimpan`,
-                        }).then(() => location.reload());
+
+                        // Eksekusi TOAST dari response yang terakhir
+                        if (
+                            lastResponseData &&
+                            lastResponseData.swal_konfirmasi
+                        ) {
+                            Toast.fire({
+                                icon: lastResponseData.swal_konfirmasi.icon, // Akan otomatis jadi 'success'
+                                title: lastResponseData.swal_konfirmasi.text, // Teksnya "Total ... Poin telah masuk"
+                            }).then(() => location.reload()); // Reload setelah toast selesai (1,2 detik)
+                        } else {
+                            // Fallback jika tidak ada data dari backend
+                            Toast.fire({
+                                icon: "success",
+                                title: `${totalItems} pelanggaran berhasil dicatat`,
+                            }).then(() => location.reload());
+                        }
                     } else {
                         throw new Error("Beberapa pelanggaran gagal disimpan");
                     }

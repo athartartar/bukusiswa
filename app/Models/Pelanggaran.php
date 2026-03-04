@@ -40,3 +40,4 @@ class Pelanggaran extends Model
         return $this->belongsTo(User::class, 'dicatat_oleh', 'username');
     }
 }
+// ini model

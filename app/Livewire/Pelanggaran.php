@@ -75,19 +75,29 @@ class Pelanggaran extends Component
         $user = Auth::user();
         $usertype = strtolower(trim($user->usertype ?? 'guest'));
 
-        $data = [];
-        $students = [];
+        $data = collect([]);
+        $students = collect([]);
+
+        // 1. Cek otomatis apakah user ini terdaftar sebagai walas
+        $isWalas = false;
+        $namaKelas = [];
+        $guru = \App\Models\Guru::where('nik', $user->username)->first();
+
+        if ($guru) {
+            $kelasIds = \App\Models\PlotWalas::where('id_guru', $guru->id_guru)->pluck('id_kelas');
+            if ($kelasIds->isNotEmpty()) {
+                $isWalas = true; // User ini terkonfirmasi adalah seorang Wali Kelas
+                $namaKelas = \App\Models\Kelas::whereIn('id_kelas', $kelasIds)->pluck('kode_kelas')->toArray();
+            }
+        }
 
         if ($usertype === 'siswa') {
+            // --- LOGIKA UNTUK SISWA ---
             $siswa = SiswaModel::where('id_user', $user->id_user)->first();
 
             if ($siswa) {
                 $data = PelanggaranModel::query()
-                    ->select(
-                        'pelanggarans.*',
-                        'siswas.namalengkap as nama_siswa',
-                        'siswas.kelas'
-                    )
+                    ->select('pelanggarans.*', 'siswas.namalengkap as nama_siswa', 'siswas.kelas')
                     ->join('siswas', 'pelanggarans.id_siswa', '=', 'siswas.id_siswa')
                     ->where('pelanggarans.id_siswa', $siswa->id_siswa) 
                     ->orderBy('id_pelanggaran', 'desc')
@@ -102,18 +112,39 @@ class Pelanggaran extends Component
                         'total_poin' => PelanggaranModel::where('id_siswa', $siswa->id_siswa)->sum('poin')
                     ]
                 ]);
+            }
+            
+        } elseif ($usertype === 'walas' || $isWalas) {
+            // --- LOGIKA KHUSUS UNTUK WALI KELAS ---
+            // Otomatis masuk ke sini jika usertype 'walas' ATAU dia terdaftar di tabel plot_walas
+
+            if (!empty($namaKelas)) {
+                // Filter data pelanggaran HANYA untuk kelas yang dia pegang
+                $data = PelanggaranModel::join('siswas', 'pelanggarans.id_siswa', '=', 'siswas.id_siswa')
+                    ->select('pelanggarans.*', 'siswas.namalengkap as nama_siswa', 'siswas.kelas')
+                    ->whereIn('siswas.kelas', $namaKelas)
+                    ->orderBy('id_pelanggaran', 'desc')
+                    ->get();
+
+                // Filter dropdown siswa khusus kelas dia
+                $students = SiswaModel::select('id_siswa as id', 'namalengkap as name', 'kelas as class', 'nis')
+                    ->whereIn('kelas', $namaKelas)
+                    ->orderBy('namalengkap')
+                    ->get()
+                    ->map(function ($student) {
+                        $student->total_poin = PelanggaranModel::where('id_siswa', $student->id)->sum('poin');
+                        return $student;
+                    });
             } else {
+                // Jika plot walas tidak ditemukan, kosongkan data
                 $data = collect([]);
                 $students = collect([]);
             }
-        }
-        else {
+
+        } else {
+            // --- LOGIKA UNTUK ADMIN, GURU BK, DLL (Lihat Semua) ---
             $data = PelanggaranModel::join('siswas', 'pelanggarans.id_siswa', '=', 'siswas.id_siswa')
-                ->select(
-                    'pelanggarans.*',
-                    'siswas.namalengkap as nama_siswa',
-                    'siswas.kelas'
-                )
+                ->select('pelanggarans.*', 'siswas.namalengkap as nama_siswa', 'siswas.kelas')
                 ->orderBy('id_pelanggaran', 'desc')
                 ->get();
 
@@ -132,5 +163,4 @@ class Pelanggaran extends Component
             'usertype' => $usertype,
             'currentSiswaId' => $this->currentSiswaId
         ]);
-    }
-}
+    }}

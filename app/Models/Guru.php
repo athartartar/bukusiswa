@@ -20,3 +20,4 @@ class Guru extends Model
         'status',
     ];
 }
+// ini model

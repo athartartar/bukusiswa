@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('password');
 
             // 3. Tipe User & Foto
-            $table->enum('usertype', ['guru', 'walas', 'bk', 'siswa', 'ortu', 'guruwali']);
+            $table->enum('usertype', ['guru', 'walas', 'bk', 'admin', 'siswa', 'ortu', 'guruwali']);
             $table->string('foto')->nullable();
 
             // 4. Status Akun

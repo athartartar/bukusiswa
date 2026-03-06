@@ -363,7 +363,7 @@
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-50">
-                    <template x-for="student in paginatedStudents" :key="student.id">
+                    <template x-for="student in paginatedStudents" :key="student.nis">
                         <tr class="group hover:bg-blue-50/30 transition-colors duration-200">
                             <td class="px-6 py-4 font-mono text-sm text-gray-600">
                                 <span class="bg-gray-100 px-2 py-1 rounded text-xs whitespace-nowrap"

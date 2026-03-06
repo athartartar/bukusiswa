@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash; // PENTING: Tambahkan ini
 
 class UserController extends Controller
 {
@@ -16,43 +17,52 @@ class UserController extends Controller
             'status' => 'required',
         ]);
 
-        $formattedName = ucwords(strtolower($request->namalengkap));
+        try {
+            $formattedName = ucwords(strtolower($request->namalengkap));
 
-        $data = [
-            'namalengkap' => $formattedName,
-            'username' => $request->username,
-            'usertype' => $request->usertype,
-            'status' => $request->status,
-        ];
+            $data = [
+                'namalengkap' => $formattedName,
+                'username' => $request->username,
+                'usertype' => $request->usertype,
+                'status' => $request->status,
+            ];
 
-        if ($request->password) {
-            $data['password'] = $request->password;
+            // Hash password jika diisi
+            if ($request->password) {
+                $data['password'] = Hash::make($request->password);
+            }
+
+            if ($request->hasFile('foto')) {
+                $file = $request->file('foto');
+                $path = $file->store('users', 'public');
+                $data['foto'] = $path;
+            }
+
+            $user = User::updateOrCreate(
+                ['id_user' => $request->id],
+                $data
+            );
+
+            // KEMBALIKAN DATA UTUH KE JAVASCRIPT
+            return response()->json([
+                'success' => 'User berhasil disimpan!',
+                'data' => $user
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Gagal menyimpan: ' . $e->getMessage()], 500);
         }
-
-        if ($request->hasFile('foto')) {
-            $file = $request->file('foto');
-            $path = $file->store('users', 'public');
-            $data['foto'] = $path;
-        }
-
-        User::updateOrCreate(
-            ['id_user' => $request->id],
-            $data
-        );
-
-        return response()->json([
-            'success' => 'User berhasil disimpan!'
-        ]);
     }
 
     public function destroy($id)
     {
-        User::destroy($id);
-
-        return response()->json([
-            'success' => 'User berhasil dihapus!'
-        ]);
+        try {
+            User::destroy($id);
+            return response()->json(['success' => 'User berhasil dihapus!']);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Gagal menghapus: ' . $e->getMessage()], 500);
+        }
     }
+
     public function saveToken(\Illuminate\Http\Request $request)
     {
         $user = \Illuminate\Support\Facades\Auth::user();

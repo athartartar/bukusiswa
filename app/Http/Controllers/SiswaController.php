@@ -25,34 +25,57 @@ class SiswaController extends Controller
         ]);
 
         try {
-            DB::transaction(function () use ($request) {
+            $siswa = DB::transaction(function () use ($request) {
                 $formattedName = ucwords(strtolower($request->name));
 
-                $user = User::updateOrCreate(
-                    ['username' => $request->nis], 
-                    [
+                // 1. CEK APAKAH INI MODE EDIT (Cari data lama)
+                $siswaLama = Siswa::find($request->id);
+
+                if ($siswaLama && $siswaLama->id_user) {
+                    // JIKA EDIT: Cari User berdasarkan id_user milik siswa tersebut
+                    $user = User::find($siswaLama->id_user);
+                    if ($user) {
+                        $user->update([
+                            'username' => $request->nis, // Update username ke NIS baru
+                            'namalengkap' => $formattedName
+                        ]);
+                    }
+                } else {
+                    // JIKA TAMBAH BARU: Bikin akun User baru
+                    $user = User::create([
+                        'username' => $request->nis,
                         'namalengkap' => $formattedName,
-                        'password' => Hash::make('siswa123'), 
+                        'password' => Hash::make('siswa123'),
                         'usertype' => 'siswa',
                         'status' => 'aktif',
-                    ]
-                );
+                    ]);
+                }
 
-                Siswa::updateOrCreate(
+                // 2. Simpan atau Update Data Siswa
+                return Siswa::updateOrCreate(
                     ['id_siswa' => $request->id],
                     [
                         'nis' => $request->nis,
                         'namalengkap' => $formattedName,
                         'kelas' => $request->class,
                         'jeniskelamin' => $request->gender,
-                        'id_user' => $user->id_user
+                        'id_user' => $user->id_user ?? $siswaLama->id_user // Amankan ID User
                     ]
                 );
             });
 
-            return response()->json(['success' => 'Data siswa dan akun berhasil disimpan!']);
+            return response()->json([
+                'success' => 'Data siswa dan akun berhasil disimpan!',
+                'data' => [
+                    'id' => $siswa->id_siswa ?? $siswa->id,
+                    'nis' => $siswa->nis,
+                    'name' => $siswa->namalengkap,
+                    'class' => $siswa->kelas,
+                    'gender' => $siswa->jeniskelamin
+                ]
+            ]);
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Gagal menyimpan data: ' . $e->getMessage()], 500);
+            return response()->json(['error' => 'Gagal menyimpan: ' . $e->getMessage()], 500);
         }
     }
 

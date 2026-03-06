@@ -100,7 +100,7 @@
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-50">
-                    <template x-for="item in paginatedKelas" :key="item.id">
+                    <template x-for="item in paginatedKelas" :key="item.kode_kelas">
                         <tr class="group hover:bg-blue-50/30 transition-colors duration-200">
                             <td class="px-6 py-4">
                                 <span class="font-bold text-gray-800 text-sm sm:text-base whitespace-nowrap"

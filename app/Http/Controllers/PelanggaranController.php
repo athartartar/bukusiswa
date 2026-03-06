@@ -52,7 +52,6 @@ class PelanggaranController extends Controller
 
         // 3. JIKA INI REQUEST TERAKHIR
         if ($is_last == 1 || $is_last == '1') {
-
             $siswa = Siswa::find($request->id_siswa);
             $targetRole = $totalPoin < 20 ? 'walas' : 'bk';
             $tokens = \App\Models\User::where('usertype', $targetRole)->whereNotNull('fcm_token')->pluck('fcm_token')->toArray();
@@ -64,9 +63,10 @@ class PelanggaranController extends Controller
                 \Log::info("Notif berhasil ditembakkan ke Firebase!");
             }
 
-            // Kirim paket SweetAlert khusus di request terakhir
+            // PERBAIKAN: Kirim kembali total_poin terbarunya
             return response()->json([
                 'success' => true,
+                'total_poin' => $totalPoin, // <--- TAMBAHAN INI
                 'swal_konfirmasi' => [
                     'title' => 'Tercatat!',
                     'text'  => "Total {$totalPoin} Poin Pelanggaran telah masuk ke sistem.",
@@ -75,8 +75,8 @@ class PelanggaranController extends Controller
             ], 201);
         }
 
-        // Kalau bukan request terakhir, kirim sukses biasa
-        return response()->json(['success' => true], 201);
+        // Kalau bukan request terakhir, kirim sukses dan total poin juga
+        return response()->json(['success' => true, 'total_poin' => $totalPoin], 201);
     }
     private function kirimNotifDenganJeda($id_siswa)
     {
@@ -222,12 +222,13 @@ class PelanggaranController extends Controller
 
         $id_siswa = $pelanggaran->id_siswa;
         $pelanggaran->delete();
-
+        $totalPoinBaru = $this->updateTotalPoin($id_siswa);
         $this->updateTotalPoin($id_siswa);
 
         return response()->json([
             'success' => true,
-            'message' => 'Pelanggaran berhasil dihapus'
+            'message' => 'Pelanggaran berhasil dihapus',
+            'total_poin' => $totalPoinBaru // <--- TAMBAHAN INI
         ]);
     }
 }

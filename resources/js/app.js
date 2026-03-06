@@ -460,10 +460,9 @@ function initCounter() {
 }
 
 document.addEventListener("alpine:init", () => {
-    // 1. Definisikan Style Toaster SweetAlert
     const Toast = Swal.mixin({
         toast: true,
-        position: "top-end", // Muncul di pojok kanan atas
+        position: "top-end",
         showConfirmButton: false,
         timer: 1000,
         timerProgressBar: true,
@@ -473,11 +472,10 @@ document.addEventListener("alpine:init", () => {
         },
     });
 
-    // 2. Definisikan Component Alpine 'siswaData'
-    // Perhatikan parameter: (dataSiswa, urlSimpan, tokenCsrf)
     Alpine.data(
         "siswaData",
         (initialStudents, listKelas, routeStore, csrfToken) => ({
+            // --- VARIABEL UTAMA (Jangan sampai terhapus) ---
             search: "",
             rowsPerPage: 5,
             currentPage: 1,
@@ -488,34 +486,46 @@ document.addEventListener("alpine:init", () => {
             isLoading: false,
             formData: { id: null, name: "", nis: "", class: "", gender: "" },
             optionsKelas: listKelas,
-            // Ambil data dari parameter yang dikirim Blade
             students: initialStudents,
 
+            // --- 1. FUNGSI FILTER & SORT ---
             get filteredStudents() {
-                let result = this.students;
+                // Gunakan .slice() agar aman dari modifikasi saat disort
+                let result = (this.students || []).slice();
+
                 if (this.search !== "") {
                     const q = this.search.toLowerCase();
-                    result = result.filter(
-                        (s) =>
-                            s.name.toLowerCase().includes(q) ||
-                            s.nis.includes(q) ||
-                            s.class.toLowerCase().includes(q),
-                    );
+                    result = result.filter((s) => {
+                        // Tambahkan pengaman .toString() agar error tidak terjadi jika data berupa angka
+                        let nama = (s.name || "").toString().toLowerCase();
+                        let nis = (s.nis || "").toString().toLowerCase();
+                        let kls = (s.class || "").toString().toLowerCase();
+
+                        return (
+                            nama.includes(q) ||
+                            nis.includes(q) ||
+                            kls.includes(q)
+                        );
+                    });
                 }
-                result = result.sort((a, b) => {
-                    let valA = a[this.sortCol].toString().toLowerCase();
-                    let valB = b[this.sortCol].toString().toLowerCase();
+
+                result.sort((a, b) => {
+                    let valA = (a[this.sortCol] || "").toString().toLowerCase();
+                    let valB = (b[this.sortCol] || "").toString().toLowerCase();
                     if (valA < valB) return this.sortAsc ? -1 : 1;
                     if (valA > valB) return this.sortAsc ? 1 : -1;
                     return 0;
                 });
                 return result;
             },
+
+            // --- PAGINATION ---
             get totalPages() {
                 return Math.ceil(
                     this.filteredStudents.length / this.rowsPerPage,
                 );
             },
+
             get paginatedStudents() {
                 let start = (this.currentPage - 1) * this.rowsPerPage;
                 return this.filteredStudents.slice(
@@ -523,6 +533,7 @@ document.addEventListener("alpine:init", () => {
                     start + this.rowsPerPage,
                 );
             },
+
             get pageNumbers() {
                 let pages = [];
                 let total = this.totalPages;
@@ -556,11 +567,14 @@ document.addEventListener("alpine:init", () => {
                 }
                 return pages;
             },
+
+            // --- TAMPILAN DRAWER ---
             get drawerTitle() {
                 if (this.drawerMode === "add") return "Tambah Siswa Baru";
                 if (this.drawerMode === "edit") return "Edit Data Siswa";
                 return "Konfirmasi Hapus";
             },
+
             get drawerDescription() {
                 if (this.drawerMode === "add")
                     return "Silakan lengkapi formulir di bawah ini.";
@@ -568,6 +582,8 @@ document.addEventListener("alpine:init", () => {
                     return "Lakukan perubahan pada data siswa.";
                 return "Tindakan ini akan menghapus data siswa secara permanen.";
             },
+
+            // --- FUNGSI INTERAKSI ---
             sortBy(col) {
                 if (this.sortCol === col) {
                     this.sortAsc = !this.sortAsc;
@@ -576,6 +592,8 @@ document.addEventListener("alpine:init", () => {
                     this.sortAsc = true;
                 }
             },
+
+            // --- 2. OPEN DRAWER ---
             openDrawer(mode, student = null) {
                 this.drawerMode = mode;
                 if (mode === "add") {
@@ -588,18 +606,20 @@ document.addEventListener("alpine:init", () => {
                     };
                 } else {
                     this.formData = { ...student };
+                    // Amankan ID (jaga-jaga kalau propertinya id_siswa)
+                    this.formData.id = student.id || student.id_siswa;
                 }
                 this.drawerOpen = true;
             },
+
             updateRows() {
                 this.currentPage = 1;
             },
 
-            // --- SAVE DATA (Pake Toaster) ---
+            // --- 3. SAVE DATA ---
             async saveData() {
                 this.isLoading = true;
                 try {
-                    // Gunakan parameter routeStore dan csrfToken
                     let response = await fetch(routeStore, {
                         method: "POST",
                         headers: {
@@ -615,15 +635,22 @@ document.addEventListener("alpine:init", () => {
                             result.message || "Gagal menyimpan data",
                         );
 
-                    this.drawerOpen = false;
+                    let newData = result.data;
 
-                    // Panggil Toast
-                    Toast.fire({
-                        icon: "success",
-                        title: "Berhasil disimpan",
-                    }).then(() => {
-                        location.reload();
-                    });
+                    // Update ke array langsung tanpa reload
+                    if (this.drawerMode === "add") {
+                        this.students.unshift(newData);
+                    } else if (this.drawerMode === "edit") {
+                        let index = this.students.findIndex(
+                            (s) => s.id === this.formData.id,
+                        );
+                        if (index !== -1) {
+                            this.students[index] = newData;
+                        }
+                    }
+
+                    this.drawerOpen = false;
+                    Toast.fire({ icon: "success", title: "Berhasil disimpan" });
                 } catch (error) {
                     Toast.fire({
                         icon: "error",
@@ -634,11 +661,10 @@ document.addEventListener("alpine:init", () => {
                 }
             },
 
-            // --- DELETE DATA (Pake Toaster) ---
+            // --- 4. DELETE DATA ---
             async deleteData() {
                 this.isLoading = true;
                 try {
-                    // Untuk delete URL-nya manual build string gapapa, tapi token tetep pake param
                     let response = await fetch("/siswa/" + this.formData.id, {
                         method: "DELETE",
                         headers: {
@@ -647,15 +673,14 @@ document.addEventListener("alpine:init", () => {
                         },
                     });
                     if (!response.ok) throw new Error("Gagal menghapus data");
-                    this.drawerOpen = false;
 
-                    // Panggil Toast
-                    Toast.fire({
-                        icon: "success",
-                        title: "Data dihapus",
-                    }).then(() => {
-                        location.reload();
-                    });
+                    // Filter array langsung tanpa reload
+                    this.students = this.students.filter(
+                        (s) => s.id !== this.formData.id,
+                    );
+
+                    this.drawerOpen = false;
+                    Toast.fire({ icon: "success", title: "Data dihapus" });
                 } catch (error) {
                     Toast.fire({
                         icon: "error",
@@ -668,10 +693,20 @@ document.addEventListener("alpine:init", () => {
 
             init() {
                 this.$watch("paginatedStudents", () => {
-                    setTimeout(() => lucide.createIcons(), 50);
+                    setTimeout(
+                        () =>
+                            typeof lucide !== "undefined" &&
+                            lucide.createIcons(),
+                        50,
+                    );
                 });
                 this.$watch("drawerOpen", () => {
-                    setTimeout(() => lucide.createIcons(), 50);
+                    setTimeout(
+                        () =>
+                            typeof lucide !== "undefined" &&
+                            lucide.createIcons(),
+                        50,
+                    );
                 });
             },
         }),
@@ -700,11 +735,10 @@ document.addEventListener("alpine:init", () => {
                 id: null,
                 id_guru: "",
                 id_kelas: "",
-                namaguru: "", // Hanya untuk display saat delete
-                kode_kelas: "", // Hanya untuk display saat delete
+                namaguru: "",
+                kode_kelas: "",
             },
 
-            // Helper untuk memunculkan teks di Dropdown
             get guruLabel() {
                 let g = this.listGuru.find(
                     (x) => x.id_guru === this.formData.id_guru,
@@ -719,24 +753,27 @@ document.addEventListener("alpine:init", () => {
             },
 
             get filteredData() {
-                let result = this.plots;
+                let result = (this.plots || []).slice(); // Copy array
                 if (this.search !== "") {
                     const q = this.search.toLowerCase();
                     result = result.filter(
                         (p) =>
-                            p.namaguru.toLowerCase().includes(q) ||
-                            p.kode_kelas.toLowerCase().includes(q),
+                            (p.namaguru &&
+                                p.namaguru.toLowerCase().includes(q)) ||
+                            (p.kode_kelas &&
+                                p.kode_kelas.toLowerCase().includes(q)),
                     );
                 }
-                result = result.sort((a, b) => {
-                    let valA = a[this.sortCol].toString().toLowerCase();
-                    let valB = b[this.sortCol].toString().toLowerCase();
+                result.sort((a, b) => {
+                    let valA = (a[this.sortCol] || "").toString().toLowerCase();
+                    let valB = (b[this.sortCol] || "").toString().toLowerCase();
                     if (valA < valB) return this.sortAsc ? -1 : 1;
                     if (valA > valB) return this.sortAsc ? 1 : -1;
                     return 0;
                 });
                 return result;
             },
+
             get totalPages() {
                 return Math.ceil(this.filteredData.length / this.rowsPerPage);
             },
@@ -775,6 +812,7 @@ document.addEventListener("alpine:init", () => {
                 }
                 return pages;
             },
+
             get drawerTitle() {
                 if (this.drawerMode === "add") return "Tambah Wali Kelas";
                 if (this.drawerMode === "edit") return "Edit Wali Kelas";
@@ -804,6 +842,7 @@ document.addEventListener("alpine:init", () => {
                     };
                 } else {
                     this.formData = { ...item };
+                    this.formData.id = item.id || item.id_walas;
                 }
                 this.drawerOpen = true;
             },
@@ -815,21 +854,37 @@ document.addEventListener("alpine:init", () => {
                         method: "POST",
                         headers: {
                             "Content-Type": "application/json",
+                            Accept: "application/json", // Pengaman anti-crash
                             "X-CSRF-TOKEN": csrfToken,
-                            Accept: "application/json",
                         },
                         body: JSON.stringify(this.formData),
                     });
+
                     let result = await response.json();
+
                     if (!response.ok) {
-                        // Cek jika error validasi (Misal: kelas sudah punya walas)
                         let errorMsg = result.message || "Gagal menyimpan data";
                         if (result.errors && result.errors.id_kelas)
                             errorMsg = result.errors.id_kelas[0];
+                        else if (result.error) errorMsg = result.error;
                         throw new Error(errorMsg);
                     }
 
-                    // Gunakan Swal/Toast milikmu di sini (saya asumsikan variabel Toast sudah ada)
+                    let newData = result.data;
+                    newData.id = newData.id || newData.id_walas;
+
+                    if (this.drawerMode === "add") {
+                        this.plots.unshift(newData);
+                    } else if (this.drawerMode === "edit") {
+                        let index = this.plots.findIndex(
+                            (p) => p.id === this.formData.id,
+                        );
+                        if (index !== -1) {
+                            this.plots[index] = newData;
+                        }
+                    }
+
+                    this.drawerOpen = false;
                     Swal.fire({
                         toast: true,
                         position: "top-end",
@@ -837,7 +892,7 @@ document.addEventListener("alpine:init", () => {
                         title: "Berhasil disimpan",
                         showConfirmButton: false,
                         timer: 1500,
-                    }).then(() => location.reload());
+                    });
                 } catch (error) {
                     Swal.fire({
                         toast: true,
@@ -845,7 +900,7 @@ document.addEventListener("alpine:init", () => {
                         icon: "error",
                         title: error.message,
                         showConfirmButton: false,
-                        timer: 2000,
+                        timer: 2500,
                     });
                 } finally {
                     this.isLoading = false;
@@ -861,11 +916,26 @@ document.addEventListener("alpine:init", () => {
                             method: "DELETE",
                             headers: {
                                 "Content-Type": "application/json",
+                                Accept: "application/json", // Pengaman anti-crash
                                 "X-CSRF-TOKEN": csrfToken,
                             },
                         },
                     );
-                    if (!response.ok) throw new Error("Gagal menghapus data");
+
+                    let result = await response.json();
+                    if (!response.ok)
+                        throw new Error(
+                            result.error ||
+                                result.message ||
+                                "Gagal menghapus data",
+                        );
+
+                    // Filter tabel di memori
+                    this.plots = this.plots.filter(
+                        (p) => p.id !== this.formData.id,
+                    );
+
+                    this.drawerOpen = false;
                     Swal.fire({
                         toast: true,
                         position: "top-end",
@@ -873,13 +943,13 @@ document.addEventListener("alpine:init", () => {
                         title: "Data dihapus",
                         showConfirmButton: false,
                         timer: 1500,
-                    }).then(() => location.reload());
+                    });
                 } catch (error) {
                     Swal.fire({
                         toast: true,
                         position: "top-end",
                         icon: "error",
-                        title: "Gagal menghapus data",
+                        title: error.message,
                         showConfirmButton: false,
                         timer: 2000,
                     });
@@ -933,8 +1003,6 @@ document.addEventListener("alpine:init", () => {
         sortCol: "namalengkap",
         sortAsc: true,
         isLoading: false,
-
-        // TAMBAHAN: Untuk Toggle Password
         showPassword: false,
 
         formData: {
@@ -949,18 +1017,27 @@ document.addEventListener("alpine:init", () => {
 
         users: initialUsers,
 
+        // --- FILTER & SORT (Hanya Tampilkan Status 'aktif') ---
         get filteredUsers() {
-            let result = [...this.users];
+            let result = (this.users || []).slice();
 
+            // 1. FILTER WAJIB: HANYA TAMPILKAN YANG AKTIF
+            result = result.filter((u) => u.status === "aktif");
+
+            // 2. FILTER PENCARIAN
             if (this.search !== "") {
                 const q = this.search.toLowerCase();
                 result = result.filter(
                     (u) =>
-                        u.namalengkap.toLowerCase().includes(q) ||
-                        u.username.toLowerCase().includes(q) ||
-                        u.usertype.toLowerCase().includes(q),
+                        (u.namalengkap &&
+                            u.namalengkap.toLowerCase().includes(q)) ||
+                        (u.username &&
+                            u.username.toString().toLowerCase().includes(q)) ||
+                        (u.usertype && u.usertype.toLowerCase().includes(q)),
                 );
             }
+
+            // 3. SORTING
             result.sort((a, b) => {
                 let valA = (a[this.sortCol] || "").toString().toLowerCase();
                 let valB = (b[this.sortCol] || "").toString().toLowerCase();
@@ -968,6 +1045,7 @@ document.addEventListener("alpine:init", () => {
                 if (valA > valB) return this.sortAsc ? 1 : -1;
                 return 0;
             });
+
             return result;
         },
 
@@ -982,13 +1060,11 @@ document.addEventListener("alpine:init", () => {
             let pages = [];
             let total = this.totalPages;
             let current = this.currentPage;
-
             if (total <= 7) {
                 for (let i = 1; i <= total; i++) pages.push(i);
             } else {
-                if (current <= 4) {
-                    pages = [1, 2, 3, 4, 5, "...", total];
-                } else if (current >= total - 3) {
+                if (current <= 4) pages = [1, 2, 3, 4, 5, "...", total];
+                else if (current >= total - 3)
                     pages = [
                         1,
                         "...",
@@ -998,7 +1074,7 @@ document.addEventListener("alpine:init", () => {
                         total - 1,
                         total,
                     ];
-                } else {
+                else
                     pages = [
                         1,
                         "...",
@@ -1008,10 +1084,10 @@ document.addEventListener("alpine:init", () => {
                         "...",
                         total,
                     ];
-                }
             }
             return pages;
         },
+
         get drawerTitle() {
             return {
                 add: "Tambah User Baru",
@@ -1026,19 +1102,19 @@ document.addEventListener("alpine:init", () => {
                 delete: "Tindakan ini permanen. User tidak akan bisa login kembali.",
             }[this.drawerMode];
         },
+
         sortBy(col) {
-            if (this.sortCol === col) {
-                this.sortAsc = !this.sortAsc;
-            } else {
+            if (this.sortCol === col) this.sortAsc = !this.sortAsc;
+            else {
                 this.sortCol = col;
                 this.sortAsc = true;
             }
-            // Reset ke halaman pertama setiap kali sorting diubah
             this.currentPage = 1;
         },
+
         openDrawer(mode, user = null) {
             this.drawerMode = mode;
-            this.showPassword = false; // Reset tampilan password setiap buka drawer
+            this.showPassword = false;
 
             if (mode === "add") {
                 this.formData = {
@@ -1046,7 +1122,7 @@ document.addEventListener("alpine:init", () => {
                     namalengkap: "",
                     username: "",
                     password: "",
-                    usertype: "", // Default kosong biar user pilih
+                    usertype: "",
                     foto: "",
                     status: "aktif",
                 };
@@ -1062,9 +1138,16 @@ document.addEventListener("alpine:init", () => {
                 };
             }
             this.drawerOpen = true;
-            this.$nextTick(() => lucide.createIcons());
+            this.$nextTick(
+                () => typeof lucide !== "undefined" && lucide.createIcons(),
+            );
         },
 
+        updateRows() {
+            this.currentPage = 1;
+        },
+
+        // --- SAVE DATA (Seamless) ---
         async saveData() {
             if (
                 !this.formData.namalengkap ||
@@ -1079,86 +1162,114 @@ document.addEventListener("alpine:init", () => {
 
             this.isLoading = true;
             try {
-                // PERBAIKAN: Gunakan POST untuk Add & Edit agar sesuai Controller updateOrCreate
-                // Kita kirim ID di body (formData), jadi backend tahu ini edit atau baru.
                 let response = await fetch(routeStore, {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
+                        Accept: "application/json", // Pengaman anti-crash
                         "X-CSRF-TOKEN": csrfToken,
-                        Accept: "application/json",
                     },
                     body: JSON.stringify({
-                        id: this.formData.id_user, // Mapping id agar ditangkap controller
+                        id: this.formData.id_user,
                         ...this.formData,
                     }),
                 });
 
-                if (!response.ok) throw new Error("Server Error");
+                let result = await response.json();
+
+                if (!response.ok) {
+                    let errorMsg = result.message || "Gagal menyimpan data";
+                    if (result.errors && result.errors.username)
+                        errorMsg = result.errors.username[0];
+                    else if (result.error) errorMsg = result.error;
+                    throw new Error(errorMsg);
+                }
+
+                let newData = result.data;
+                newData.id_user = newData.id_user || newData.id;
+
+                // Perbarui tabel secara langsung
+                if (this.drawerMode === "add") {
+                    this.users.unshift(newData);
+                } else if (this.drawerMode === "edit") {
+                    let index = this.users.findIndex(
+                        (u) => u.id_user === this.formData.id_user,
+                    );
+                    if (index !== -1) {
+                        this.users[index] = newData;
+                    }
+                }
 
                 this.drawerOpen = false;
                 Toast.fire({
                     icon: "success",
                     title: "Data berhasil disimpan",
-                }).then(() => location.reload());
+                });
+                // reload dihapus
             } catch (error) {
-                Toast.fire({ icon: "error", title: "Gagal menyimpan data" });
+                Toast.fire({ icon: "error", title: error.message });
             } finally {
                 this.isLoading = false;
             }
         },
 
+        // --- DELETE DATA (Seamless) ---
         async deleteData() {
             this.isLoading = true;
             try {
-                // Pastikan route delete di web.php: Route::delete('/user/{id}', ...)
-                // Sesuaikan URL prefix '/user/' dengan route kamu
                 let response = await fetch(`/user/${this.formData.id_user}`, {
                     method: "DELETE",
                     headers: {
+                        "Content-Type": "application/json",
+                        Accept: "application/json", // Pengaman anti-crash
                         "X-CSRF-TOKEN": csrfToken,
-                        Accept: "application/json",
                     },
                 });
 
-                if (!response.ok) throw new Error();
+                let result = await response.json();
+                if (!response.ok)
+                    throw new Error(
+                        result.error ||
+                            result.message ||
+                            "Gagal menghapus user",
+                    );
+
+                // Hapus data dari array lokal
+                this.users = this.users.filter(
+                    (u) => u.id_user !== this.formData.id_user,
+                );
 
                 this.drawerOpen = false;
-                Toast.fire({
-                    icon: "success",
-                    title: "User telah dihapus",
-                }).then(() => location.reload());
+                Toast.fire({ icon: "success", title: "User telah dihapus" });
+                // reload dihapus
             } catch (error) {
-                Toast.fire({ icon: "error", title: "Gagal menghapus user" });
+                Toast.fire({ icon: "error", title: error.message });
             } finally {
                 this.isLoading = false;
             }
         },
 
-        updateRows() {
-            this.currentPage = 1;
-        },
-
-        // PERBAIKAN: Gunakan $watch 'paginatedUsers' agar ikon selalu ter-render saat tampilannya diubah
         init() {
             this.$watch("paginatedUsers", () => {
-                setTimeout(() => lucide.createIcons(), 50);
+                setTimeout(
+                    () => typeof lucide !== "undefined" && lucide.createIcons(),
+                    50,
+                );
             });
             this.$watch("drawerOpen", () => {
-                setTimeout(() => lucide.createIcons(), 50);
+                setTimeout(
+                    () => typeof lucide !== "undefined" && lucide.createIcons(),
+                    50,
+                );
             });
             this.$watch("search", () => {
                 this.currentPage = 1;
             });
-
-            setTimeout(() => lucide.createIcons(), 50);
         },
     }));
 });
 
-//guru tabel
 document.addEventListener("alpine:init", () => {
-    // 1. Definisikan Style Toaster SweetAlert (Sama persis)
     const Toast = Swal.mixin({
         toast: true,
         position: "top-end",
@@ -1171,8 +1282,8 @@ document.addEventListener("alpine:init", () => {
         },
     });
 
-    // 2. Definisikan Component Alpine 'guruData'
     Alpine.data("guruData", (initialGurus, routeStore, csrfToken) => ({
+        // --- VARIABEL UTAMA ---
         search: "",
         rowsPerPage: 5,
         currentPage: 1,
@@ -1181,7 +1292,6 @@ document.addEventListener("alpine:init", () => {
         sortCol: "name",
         sortAsc: true,
         isLoading: false,
-        // Field disesuaikan: nik, kodeguru, status
         formData: {
             id: null,
             name: "",
@@ -1189,30 +1299,30 @@ document.addEventListener("alpine:init", () => {
             kodeguru: "",
             status: "Aktif",
         },
-
-        // Ambil data dari parameter blade
         gurus: initialGurus,
 
+        // --- 1. FUNGSI FILTER & SORT (Anti-Bug) ---
         get filteredGurus() {
-            let result = this.gurus;
+            let result = (this.gurus || []).slice(); // Copy array agar aman
             if (this.search !== "") {
                 const q = this.search.toLowerCase();
                 result = result.filter(
                     (g) =>
-                        g.name.toLowerCase().includes(q) ||
-                        g.nik.includes(q) ||
-                        g.kodeguru.toLowerCase().includes(q),
+                        (g.name && g.name.toLowerCase().includes(q)) ||
+                        (g.nik && g.nik.toString().toLowerCase().includes(q)) ||
+                        (g.kodeguru && g.kodeguru.toLowerCase().includes(q)),
                 );
             }
-            result = result.sort((a, b) => {
-                let valA = a[this.sortCol].toString().toLowerCase();
-                let valB = b[this.sortCol].toString().toLowerCase();
+            result.sort((a, b) => {
+                let valA = (a[this.sortCol] || "").toString().toLowerCase();
+                let valB = (b[this.sortCol] || "").toString().toLowerCase();
                 if (valA < valB) return this.sortAsc ? -1 : 1;
                 if (valA > valB) return this.sortAsc ? 1 : -1;
                 return 0;
             });
             return result;
         },
+
         get totalPages() {
             return Math.ceil(this.filteredGurus.length / this.rowsPerPage);
         },
@@ -1253,6 +1363,7 @@ document.addEventListener("alpine:init", () => {
             }
             return pages;
         },
+
         get drawerTitle() {
             if (this.drawerMode === "add") return "Tambah Guru Baru";
             if (this.drawerMode === "edit") return "Edit Data Guru";
@@ -1265,6 +1376,7 @@ document.addEventListener("alpine:init", () => {
                 return "Lakukan perubahan pada data guru.";
             return "Tindakan ini akan menghapus data guru secara permanen.";
         },
+
         sortBy(col) {
             if (this.sortCol === col) {
                 this.sortAsc = !this.sortAsc;
@@ -1273,6 +1385,8 @@ document.addEventListener("alpine:init", () => {
                 this.sortAsc = true;
             }
         },
+
+        // --- 2. OPEN DRAWER (Aman dari ID Kosong) ---
         openDrawer(mode, guru = null) {
             this.drawerMode = mode;
             if (mode === "add") {
@@ -1284,18 +1398,19 @@ document.addEventListener("alpine:init", () => {
                     status: "Aktif",
                 };
             } else {
-                // Spread operator untuk copy data guru ke form
-                this.formData = {
-                    ...guru,
-                };
+                this.formData = { ...guru };
+                // Jaga-jaga jika ID dari database bernama id_guru
+                this.formData.id = guru.id || guru.id_guru;
             }
             this.drawerOpen = true;
         },
+
         updateRows() {
             this.currentPage = 1;
         },
 
-        // --- SAVE DATA ---
+        // --- 3. SAVE DATA (Tanpa Reload) ---
+        // --- 3. SAVE DATA (Tanpa Reload) ---
         async saveData() {
             this.isLoading = true;
             try {
@@ -1303,37 +1418,55 @@ document.addEventListener("alpine:init", () => {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
+                        Accept: "application/json", // <--- TAMBAHKAN BARIS INI (SANGAT PENTING!)
                         "X-CSRF-TOKEN": csrfToken,
                     },
                     body: JSON.stringify(this.formData),
                 });
 
                 let result = await response.json();
-                if (!response.ok)
-                    throw new Error(result.message || "Gagal menyimpan data");
+
+                // Jika error (termasuk error validasi seperti NIK duplikat)
+                if (!response.ok) {
+                    // Tangkap pesan error dari validasi Laravel
+                    let errorMessage = "Gagal menyimpan data";
+                    if (result.errors) {
+                        // Ambil pesan error pertama dari daftar validasi
+                        errorMessage = Object.values(result.errors)[0][0];
+                    } else if (result.error || result.message) {
+                        errorMessage = result.error || result.message;
+                    }
+                    throw new Error(errorMessage);
+                }
+
+                let newData = result.data;
+                newData.id = newData.id || newData.id_guru;
+
+                if (this.drawerMode === "add") {
+                    this.gurus.unshift(newData);
+                } else if (this.drawerMode === "edit") {
+                    let index = this.gurus.findIndex(
+                        (g) => g.id === this.formData.id,
+                    );
+                    if (index !== -1) {
+                        this.gurus[index] = newData;
+                    }
+                }
 
                 this.drawerOpen = false;
-                Toast.fire({
-                    icon: "success",
-                    title: "Berhasil disimpan",
-                }).then(() => {
-                    location.reload();
-                });
+                Toast.fire({ icon: "success", title: "Berhasil disimpan" });
             } catch (error) {
-                Toast.fire({
-                    icon: "error",
-                    title: "Gagal menyimpan data",
-                });
+                // Sekarang toaster merah akan menampilkan error aslinya (misal: "NIK sudah terdaftar")
+                Toast.fire({ icon: "error", title: error.message });
             } finally {
                 this.isLoading = false;
             }
         },
 
-        // --- DELETE DATA ---
+        // --- 4. DELETE DATA (Tanpa Reload) ---
         async deleteData() {
             this.isLoading = true;
             try {
-                // Endpoint delete disesuaikan ke /guru/
                 let response = await fetch("/guru/" + this.formData.id, {
                     method: "DELETE",
                     headers: {
@@ -1342,18 +1475,17 @@ document.addEventListener("alpine:init", () => {
                     },
                 });
                 if (!response.ok) throw new Error("Gagal menghapus data");
+
+                // Hapus data dari array memori
+                this.gurus = this.gurus.filter(
+                    (g) => g.id !== this.formData.id,
+                );
+
                 this.drawerOpen = false;
-                Toast.fire({
-                    icon: "success",
-                    title: "Data dihapus",
-                }).then(() => {
-                    location.reload();
-                });
+                Toast.fire({ icon: "success", title: "Data dihapus" });
+                // location.reload() dihapus
             } catch (error) {
-                Toast.fire({
-                    icon: "error",
-                    title: "Gagal menghapus data",
-                });
+                Toast.fire({ icon: "error", title: "Gagal menghapus data" });
             } finally {
                 this.isLoading = false;
             }
@@ -1361,10 +1493,16 @@ document.addEventListener("alpine:init", () => {
 
         init() {
             this.$watch("paginatedGurus", () => {
-                setTimeout(() => lucide.createIcons(), 50);
+                setTimeout(
+                    () => typeof lucide !== "undefined" && lucide.createIcons(),
+                    50,
+                );
             });
             this.$watch("drawerOpen", () => {
-                setTimeout(() => lucide.createIcons(), 50);
+                setTimeout(
+                    () => typeof lucide !== "undefined" && lucide.createIcons(),
+                    50,
+                );
             });
         },
     }));
@@ -1406,22 +1544,33 @@ document.addEventListener("alpine:init", () => {
         kelases: initialKelas,
 
         get filteredKelas() {
-            let result = this.kelases;
+            // PERUBAHAN 1: Kita gunakan spread operator [...] untuk membuat 'copy' dari array.
+            // Ini sangat penting agar array asli (this.kelases) tidak rusak/berubah saat di-sort.
+            let result = [...this.kelases];
+
             if (this.search !== "") {
                 const q = this.search.toLowerCase();
                 result = result.filter(
                     (k) =>
-                        k.kode_kelas.toLowerCase().includes(q) ||
-                        k.status.toLowerCase().includes(q),
+                        // PERUBAHAN 2: Tambahkan pengaman (k.kode_kelas && ...)
+                        // untuk mencegah error jika ada data yang kosong (undefined)
+                        (k.kode_kelas &&
+                            k.kode_kelas.toLowerCase().includes(q)) ||
+                        (k.status && k.status.toLowerCase().includes(q)),
                 );
             }
-            result = result.sort((a, b) => {
-                let valA = a[this.sortCol].toString().toLowerCase();
-                let valB = b[this.sortCol].toString().toLowerCase();
+
+            result.sort((a, b) => {
+                // PERUBAHAN 3: Tambahkan pengaman ( || "" )
+                // agar jika data baru belum punya kolom yang lengkap, tidak menyebabkan bug baris kosong
+                let valA = (a[this.sortCol] || "").toString().toLowerCase();
+                let valB = (b[this.sortCol] || "").toString().toLowerCase();
+
                 if (valA < valB) return this.sortAsc ? -1 : 1;
                 if (valA > valB) return this.sortAsc ? 1 : -1;
                 return 0;
             });
+
             return result;
         },
         get totalPages() {
@@ -1484,6 +1633,7 @@ document.addEventListener("alpine:init", () => {
                 this.sortAsc = true;
             }
         },
+        // --- OPEN DRAWER ---
         openDrawer(mode, kelas = null) {
             this.drawerMode = mode;
             if (mode === "add") {
@@ -1493,15 +1643,13 @@ document.addEventListener("alpine:init", () => {
                     status: "Aktif",
                 };
             } else {
-                // Spread operator untuk copy data kelas ke form
-                this.formData = {
-                    ...kelas,
-                };
+                // Mode Edit atau Delete
+                this.formData = { ...kelas };
+
+                // KODE PENGAMAN: Ambil 'id' jika ada, kalau kosong ambil 'id_kelas'
+                this.formData.id = kelas.id || kelas.id_kelas;
             }
             this.drawerOpen = true;
-        },
-        updateRows() {
-            this.currentPage = 1;
         },
 
         // --- SAVE DATA ---
@@ -1521,12 +1669,25 @@ document.addEventListener("alpine:init", () => {
                 if (!response.ok)
                     throw new Error(result.message || "Gagal menyimpan data");
 
+                // KODE PENGAMAN: Kita seragamkan data dari server
+                let newData = result.data;
+                newData.id = newData.id || newData.id_kelas;
+
+                if (this.drawerMode === "add") {
+                    this.kelases.unshift(newData);
+                } else if (this.drawerMode === "edit") {
+                    let index = this.kelases.findIndex(
+                        (k) => k.id === this.formData.id,
+                    );
+                    if (index !== -1) {
+                        this.kelases[index] = newData;
+                    }
+                }
+
                 this.drawerOpen = false;
                 Toast.fire({
                     icon: "success",
                     title: "Berhasil disimpan",
-                }).then(() => {
-                    location.reload();
                 });
             } catch (error) {
                 Toast.fire({
@@ -1542,7 +1703,6 @@ document.addEventListener("alpine:init", () => {
         async deleteData() {
             this.isLoading = true;
             try {
-                // Endpoint delete ke /kelas/id
                 let response = await fetch("/kelas/" + this.formData.id, {
                     method: "DELETE",
                     headers: {
@@ -1550,13 +1710,18 @@ document.addEventListener("alpine:init", () => {
                         "X-CSRF-TOKEN": csrfToken,
                     },
                 });
+
                 if (!response.ok) throw new Error("Gagal menghapus data");
+
+                // Kita kembalikan menghapus menggunakan .id
+                this.kelases = this.kelases.filter(
+                    (k) => k.id !== this.formData.id,
+                );
+
                 this.drawerOpen = false;
                 Toast.fire({
                     icon: "success",
                     title: "Data dihapus",
-                }).then(() => {
-                    location.reload();
                 });
             } catch (error) {
                 Toast.fire({
@@ -1617,14 +1782,6 @@ document.addEventListener("alpine:init", () => {
             filterKelas: "",
             sortByPoin: "",
 
-            formData: {
-                id: null,
-                name: "",
-                nis: "",
-                class: "",
-                gender: "",
-            },
-
             pelanggaranList: {
                 ringan: [
                     { id: "ringan_1", jenis: "Terlambat", poin: 5 },
@@ -1654,13 +1811,9 @@ document.addEventListener("alpine:init", () => {
                     navigator.userAgent,
                 );
             },
-
-            // Cek apakah user adalah siswa
             get isSiswa() {
                 return this.usertype === "siswa";
             },
-
-            // Cek apakah bisa mencatat (siswa tidak bisa)
             get canCreate() {
                 return this.usertype !== "siswa";
             },
@@ -1668,9 +1821,8 @@ document.addEventListener("alpine:init", () => {
             get totalSelectedPoin() {
                 let total = 0;
                 for (let key in this.selectedPelanggaran) {
-                    if (this.selectedPelanggaran[key]) {
+                    if (this.selectedPelanggaran[key])
                         total += this.selectedPelanggaran[key].poin;
-                    }
                 }
                 return total;
             },
@@ -1691,15 +1843,15 @@ document.addEventListener("alpine:init", () => {
             },
 
             get filteredStudents() {
-                let result = this.students;
-
+                let result = (this.students || []).slice(); // Copy Array
                 if (this.search !== "") {
                     const q = this.search.toLowerCase();
                     result = result.filter(
                         (s) =>
-                            s.name.toLowerCase().includes(q) ||
-                            s.nis.includes(q) ||
-                            s.class.toLowerCase().includes(q),
+                            (s.name && s.name.toLowerCase().includes(q)) ||
+                            (s.nis &&
+                                s.nis.toString().toLowerCase().includes(q)) ||
+                            (s.class && s.class.toLowerCase().includes(q)),
                     );
                 }
 
@@ -1717,14 +1869,17 @@ document.addEventListener("alpine:init", () => {
                     });
                 } else {
                     result = result.sort((a, b) => {
-                        let valA = a[this.sortCol].toString().toLowerCase();
-                        let valB = b[this.sortCol].toString().toLowerCase();
+                        let valA = (a[this.sortCol] || "")
+                            .toString()
+                            .toLowerCase();
+                        let valB = (b[this.sortCol] || "")
+                            .toString()
+                            .toLowerCase();
                         if (valA < valB) return this.sortAsc ? -1 : 1;
                         if (valA > valB) return this.sortAsc ? 1 : -1;
                         return 0;
                     });
                 }
-
                 return result;
             },
 
@@ -1733,7 +1888,6 @@ document.addEventListener("alpine:init", () => {
                     this.filteredStudents.length / this.rowsPerPage,
                 );
             },
-
             get paginatedStudents() {
                 let start = (this.currentPage - 1) * this.rowsPerPage;
                 return this.filteredStudents.slice(
@@ -1741,18 +1895,15 @@ document.addEventListener("alpine:init", () => {
                     start + this.rowsPerPage,
                 );
             },
-
             get pageNumbers() {
                 let pages = [];
                 let total = this.totalPages;
                 let current = this.currentPage;
-
                 if (total <= 7) {
                     for (let i = 1; i <= total; i++) pages.push(i);
                 } else {
-                    if (current <= 4) {
-                        pages = [1, 2, 3, 4, 5, "...", total];
-                    } else if (current >= total - 3) {
+                    if (current <= 4) pages = [1, 2, 3, 4, 5, "...", total];
+                    else if (current >= total - 3)
                         pages = [
                             1,
                             "...",
@@ -1762,7 +1913,7 @@ document.addEventListener("alpine:init", () => {
                             total - 1,
                             total,
                         ];
-                    } else {
+                    else
                         pages = [
                             1,
                             "...",
@@ -1772,15 +1923,11 @@ document.addEventListener("alpine:init", () => {
                             "...",
                             total,
                         ];
-                    }
                 }
                 return pages;
             },
 
             get drawerTitle() {
-                if (this.drawerMode === "add") return "Tambah Siswa";
-                if (this.drawerMode === "edit") return "Edit Siswa";
-                if (this.drawerMode === "delete") return "Hapus Siswa";
                 if (this.drawerMode === "tambahPelanggaran")
                     return "Catat Pelanggaran";
                 if (this.drawerMode === "riwayat") return "Riwayat Pelanggaran";
@@ -1800,12 +1947,8 @@ document.addEventListener("alpine:init", () => {
                     delete this.selectedPelanggaran[id];
                     this.removePhoto(id);
                 } else {
-                    this.selectedPelanggaran[id] = {
-                        jenis: jenis,
-                        poin: poin,
-                    };
+                    this.selectedPelanggaran[id] = { jenis: jenis, poin: poin };
                 }
-
                 this.selectedPelanggaran = { ...this.selectedPelanggaran };
             },
 
@@ -1817,7 +1960,6 @@ document.addEventListener("alpine:init", () => {
                         img.onload = () => {
                             const canvas = document.createElement("canvas");
                             const ctx = canvas.getContext("2d");
-
                             const MAX_WIDTH = 1200;
                             const MAX_HEIGHT = 1200;
                             let width = img.width;
@@ -1834,10 +1976,8 @@ document.addEventListener("alpine:init", () => {
                                     height = MAX_HEIGHT;
                                 }
                             }
-
                             canvas.width = width;
                             canvas.height = height;
-
                             ctx.drawImage(img, 0, 0, width, height);
 
                             let quality = 0.8;
@@ -1862,7 +2002,6 @@ document.addEventListener("alpine:init", () => {
                                     q,
                                 );
                             };
-
                             tryCompress(quality);
                         };
                         img.onerror = reject;
@@ -1876,13 +2015,11 @@ document.addEventListener("alpine:init", () => {
             async handleFileUpload(event, pelanggaranId) {
                 const file = event.target.files[0];
                 if (!file) return;
-
                 if (!file.type.startsWith("image/")) {
-                    Toast.fire({
+                    return Toast.fire({
                         icon: "error",
                         title: "File harus berupa gambar",
                     });
-                    return;
                 }
 
                 try {
@@ -1891,16 +2028,10 @@ document.addEventListener("alpine:init", () => {
                         title: "Mengompres foto...",
                         timer: 500,
                     });
-
                     let processedFile = file;
-
                     if (file.size > 500 * 1024) {
                         processedFile = await this.compressImage(file);
                         const sizeKB = (processedFile.size / 1024).toFixed(0);
-                        console.log(
-                            `Foto dikompres dari ${(file.size / 1024).toFixed(0)}KB ke ${sizeKB}KB`,
-                        );
-
                         Toast.fire({
                             icon: "success",
                             title: `Foto dikompres ke ${sizeKB}KB`,
@@ -1909,17 +2040,19 @@ document.addEventListener("alpine:init", () => {
                     }
 
                     this.photoFiles[pelanggaranId] = processedFile;
-
                     const reader = new FileReader();
                     reader.onload = (e) => {
                         this.photoPreview[pelanggaranId] = e.target.result;
                         this.photoPreview = { ...this.photoPreview };
-
-                        setTimeout(() => lucide.createIcons(), 50);
+                        setTimeout(
+                            () =>
+                                typeof lucide !== "undefined" &&
+                                lucide.createIcons(),
+                            50,
+                        );
                     };
                     reader.readAsDataURL(processedFile);
                 } catch (error) {
-                    console.error("Error compressing image:", error);
                     Toast.fire({
                         icon: "error",
                         title: "Gagal memproses foto",
@@ -1930,23 +2063,20 @@ document.addEventListener("alpine:init", () => {
             removePhoto(pelanggaranId) {
                 delete this.photoFiles[pelanggaranId];
                 delete this.photoPreview[pelanggaranId];
-
                 const fileInput = document.getElementById(
                     "file-" + pelanggaranId,
                 );
-                if (fileInput) {
-                    fileInput.value = "";
-                }
-
+                if (fileInput) fileInput.value = "";
                 this.photoFiles = { ...this.photoFiles };
                 this.photoPreview = { ...this.photoPreview };
-
-                setTimeout(() => lucide.createIcons(), 50);
             },
 
             openFullscreen(imageUrl) {
                 this.fullscreenImage = imageUrl;
-                setTimeout(() => lucide.createIcons(), 50);
+                setTimeout(
+                    () => typeof lucide !== "undefined" && lucide.createIcons(),
+                    50,
+                );
             },
 
             openDrawer(mode, student = null) {
@@ -1954,15 +2084,11 @@ document.addEventListener("alpine:init", () => {
                 this.selectedStudent = student;
 
                 if (mode === "tambahPelanggaran") {
-                    // Siswa tidak bisa catat
-                    if (this.isSiswa) {
-                        Toast.fire({
+                    if (this.isSiswa)
+                        return Toast.fire({
                             icon: "error",
                             title: "Siswa tidak dapat mencatat pelanggaran",
                         });
-                        return;
-                    }
-
                     this.selectedPelanggaran = {};
                     this.photoFiles = {};
                     this.photoPreview = {};
@@ -1970,22 +2096,7 @@ document.addEventListener("alpine:init", () => {
                 }
 
                 if (mode === "riwayat") {
-                    console.log("Loading riwayat untuk student:", student);
-                    this.loadRiwayat(student.id);
-                }
-
-                if (mode === "edit" || mode === "delete") {
-                    this.formData = { ...student };
-                }
-
-                if (mode === "add") {
-                    this.formData = {
-                        id: null,
-                        name: "",
-                        nis: "",
-                        class: "",
-                        gender: "",
-                    };
+                    this.loadRiwayat(student.id || student.id_siswa);
                 }
 
                 this.drawerOpen = true;
@@ -1994,31 +2105,14 @@ document.addEventListener("alpine:init", () => {
             async loadRiwayat(studentId) {
                 this.isLoadingRiwayat = true;
                 this.riwayatList = [];
-
                 try {
-                    console.log("Fetching riwayat for student ID:", studentId);
-
                     let res = await fetch(`/pelanggaran/riwayat/${studentId}`);
-
-                    console.log("Response status:", res.status);
-
-                    if (!res.ok) {
-                        const errorText = await res.text();
-                        console.error("Response error:", errorText);
-                        throw new Error(`HTTP error! status: ${res.status}`);
-                    }
-
-                    let data = await res.json();
-                    console.log("Riwayat data received:", data);
-
-                    this.riwayatList = data;
-
-                    setTimeout(() => lucide.createIcons(), 100);
+                    if (!res.ok) throw new Error("Gagal load");
+                    this.riwayatList = await res.json();
                 } catch (e) {
-                    console.error("Gagal load riwayat:", e);
                     Toast.fire({
                         icon: "error",
-                        title: "Gagal memuat riwayat: " + e.message,
+                        title: "Gagal memuat riwayat",
                     });
                 } finally {
                     this.isLoadingRiwayat = false;
@@ -2041,9 +2135,123 @@ document.addEventListener("alpine:init", () => {
                 }
             },
 
-            // ================= DELETE PELANGGARAN =================
+            // ================= UPDATE POIN REALTIME (HELPER) =================
+            updateSiswaPoin(studentId, newTotal) {
+                let index = this.students.findIndex(
+                    (s) => (s.id || s.id_siswa) === studentId,
+                );
+                if (index !== -1) {
+                    this.students[index].total_poin = newTotal;
+                }
+                // Jika sedang buka riwayat, update header poinnya juga
+                if (
+                    this.selectedStudent &&
+                    (this.selectedStudent.id ||
+                        this.selectedStudent.id_siswa) === studentId
+                ) {
+                    this.selectedStudent.total_poin = newTotal;
+                }
+            },
+
+            // ================= SAVE BATCH (SEAMLESS) =================
+            async savePelanggaranBatch() {
+                if (Object.keys(this.selectedPelanggaran).length === 0) {
+                    return Toast.fire({
+                        icon: "warning",
+                        title: "Pilih minimal 1 pelanggaran",
+                    });
+                }
+                this.isLoading = true;
+                try {
+                    const keys = Object.keys(this.selectedPelanggaran);
+                    const totalItems = keys.length;
+                    let lastResponseData = null;
+                    let allSuccess = true;
+
+                    for (let i = 0; i < totalItems; i++) {
+                        let pelanggaranId = keys[i];
+                        const pelanggaran =
+                            this.selectedPelanggaran[pelanggaranId];
+                        const isLastItem = i === totalItems - 1;
+
+                        const formData = new FormData();
+                        formData.append(
+                            "id_siswa",
+                            this.selectedStudent.id ||
+                                this.selectedStudent.id_siswa,
+                        );
+                        formData.append("jenis_pelanggaran", pelanggaran.jenis);
+                        formData.append("poin", pelanggaran.poin);
+                        formData.append("keterangan", this.keteranganTambahan);
+                        formData.append("is_last", isLastItem ? "1" : "0");
+                        if (this.photoFiles[pelanggaranId])
+                            formData.append(
+                                "bukti_foto",
+                                this.photoFiles[pelanggaranId],
+                            );
+
+                        const response = await fetch("/pelanggaran/store", {
+                            method: "POST",
+                            headers: {
+                                "X-CSRF-TOKEN": csrfToken,
+                                Accept: "application/json", // Anti crash
+                            },
+                            body: formData,
+                        });
+
+                        if (!response.ok) {
+                            allSuccess = false;
+                            break;
+                        }
+
+                        let responseData = await response.json();
+                        if (isLastItem) lastResponseData = responseData;
+                    }
+
+                    if (allSuccess) {
+                        this.drawerOpen = false;
+
+                        // UPDATE UI POIN SECARA REALTIME!
+                        if (
+                            lastResponseData &&
+                            lastResponseData.total_poin !== undefined
+                        ) {
+                            this.updateSiswaPoin(
+                                this.selectedStudent.id ||
+                                    this.selectedStudent.id_siswa,
+                                lastResponseData.total_poin,
+                            );
+                        }
+
+                        if (
+                            lastResponseData &&
+                            lastResponseData.swal_konfirmasi
+                        ) {
+                            Toast.fire({
+                                icon: lastResponseData.swal_konfirmasi.icon,
+                                title: lastResponseData.swal_konfirmasi.text,
+                            }); // location.reload() DIHAPUS
+                        } else {
+                            Toast.fire({
+                                icon: "success",
+                                title: `${totalItems} pelanggaran berhasil dicatat`,
+                            });
+                        }
+                    } else {
+                        throw new Error("Beberapa pelanggaran gagal disimpan");
+                    }
+                } catch (error) {
+                    Toast.fire({
+                        icon: "error",
+                        title: "Gagal menyimpan pelanggaran",
+                    });
+                } finally {
+                    this.isLoading = false;
+                }
+            },
+
+            // ================= DELETE PELANGGARAN (SEAMLESS) =================
             async deletePelanggaran(id_pelanggaran) {
-                // Confirm delete
                 const result = await Swal.fire({
                     title: "Hapus Pelanggaran?",
                     text: "Data yang dihapus tidak dapat dikembalikan!",
@@ -2065,6 +2273,7 @@ document.addEventListener("alpine:init", () => {
                             headers: {
                                 "X-CSRF-TOKEN": csrfToken,
                                 "Content-Type": "application/json",
+                                Accept: "application/json", // Anti crash
                             },
                         },
                     );
@@ -2072,181 +2281,32 @@ document.addEventListener("alpine:init", () => {
                     const data = await response.json();
 
                     if (response.ok && data.success) {
+                        // UPDATE UI POIN SECARA REALTIME
+                        if (data.total_poin !== undefined) {
+                            this.updateSiswaPoin(
+                                this.selectedStudent.id ||
+                                    this.selectedStudent.id_siswa,
+                                data.total_poin,
+                            );
+                        }
+
+                        // HILANGKAN DATA DARI LIST RIWAYAT TANPA RELOAD
+                        this.riwayatList = this.riwayatList.filter(
+                            (r) => r.id_pelanggaran !== id_pelanggaran,
+                        );
+
                         Toast.fire({
                             icon: "success",
                             title: "Pelanggaran berhasil dihapus",
-                        }).then(() => {
-                            // Reload riwayat
-                            this.loadRiwayat(this.selectedStudent.id);
-                            // Reload page untuk update total poin
-                            setTimeout(() => location.reload(), 500);
-                        });
+                        }); // location.reload() DIHAPUS
                     } else {
                         throw new Error(data.message || "Gagal menghapus");
                     }
                 } catch (error) {
-                    console.error("Error deleting:", error);
                     Toast.fire({
                         icon: "error",
                         title: error.message || "Gagal menghapus pelanggaran",
                     });
-                }
-            },
-
-            async savePelanggaranBatch() {
-                if (Object.keys(this.selectedPelanggaran).length === 0) {
-                    Toast.fire({
-                        icon: "warning",
-                        title: "Pilih minimal 1 pelanggaran",
-                    });
-                    return;
-                }
-
-                this.isLoading = true;
-
-                try {
-                    const keys = Object.keys(this.selectedPelanggaran);
-                    const totalItems = keys.length;
-                    let lastResponseData = null;
-                    let allSuccess = true;
-
-                    // KUNCI UTAMA: Pake await di dalam loop agar request ngantri satu per satu
-                    for (let i = 0; i < totalItems; i++) {
-                        let pelanggaranId = keys[i];
-                        const pelanggaran =
-                            this.selectedPelanggaran[pelanggaranId];
-                        const isLastItem = i === totalItems - 1;
-
-                        // TAMBAHAN LOG UNTUK BUKTI DI LAPTOP
-                        console.log(
-                            `Mengirim: ${pelanggaran.jenis} | Apakah Terakhir? ${isLastItem ? "YA (1)" : "BUKAN (0)"}`,
-                        );
-
-                        const formData = new FormData();
-                        formData.append("id_siswa", this.selectedStudent.id);
-                        formData.append("jenis_pelanggaran", pelanggaran.jenis);
-                        formData.append("poin", pelanggaran.poin);
-                        formData.append("keterangan", this.keteranganTambahan);
-
-                        // Kirim indikator (1 untuk terakhir, 0 untuk lainnya)
-                        formData.append("is_last", isLastItem ? "1" : "0");
-
-                        if (this.photoFiles[pelanggaranId]) {
-                            formData.append(
-                                "bukti_foto",
-                                this.photoFiles[pelanggaranId],
-                            );
-                        }
-
-                        // Tunggu sampai 1 data ini sukses tersimpan, baru lanjut ke data berikutnya
-                        const response = await fetch("/pelanggaran/store", {
-                            method: "POST",
-                            headers: {
-                                "X-CSRF-TOKEN": csrfToken,
-                            },
-                            body: formData,
-                        });
-
-                        if (!response.ok) {
-                            allSuccess = false;
-                            break; // Berhenti kalau ada yang error
-                        }
-
-                        // Kalau ini request terakhir, simpan respon json-nya untuk SweetAlert
-                        if (isLastItem) {
-                            lastResponseData = await response.json();
-                        }
-                    }
-
-                    if (allSuccess) {
-                        this.drawerOpen = false;
-
-                        // Eksekusi TOAST dari response yang terakhir
-                        if (
-                            lastResponseData &&
-                            lastResponseData.swal_konfirmasi
-                        ) {
-                            Toast.fire({
-                                icon: lastResponseData.swal_konfirmasi.icon, // Akan otomatis jadi 'success'
-                                title: lastResponseData.swal_konfirmasi.text, // Teksnya "Total ... Poin telah masuk"
-                            }).then(() => location.reload()); // Reload setelah toast selesai (1,2 detik)
-                        } else {
-                            // Fallback jika tidak ada data dari backend
-                            Toast.fire({
-                                icon: "success",
-                                title: `${totalItems} pelanggaran berhasil dicatat`,
-                            }).then(() => location.reload());
-                        }
-                    } else {
-                        throw new Error("Beberapa pelanggaran gagal disimpan");
-                    }
-                } catch (error) {
-                    console.error("Error:", error);
-                    Toast.fire({
-                        icon: "error",
-                        title: "Gagal menyimpan pelanggaran",
-                    });
-                } finally {
-                    this.isLoading = false;
-                }
-            },
-
-            async saveData() {
-                this.isLoading = true;
-
-                try {
-                    let response = await fetch(routeStore, {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/json",
-                            "X-CSRF-TOKEN": csrfToken,
-                        },
-                        body: JSON.stringify(this.formData),
-                    });
-
-                    if (!response.ok) throw new Error();
-
-                    this.drawerOpen = false;
-
-                    Toast.fire({
-                        icon: "success",
-                        title: "Berhasil disimpan",
-                    }).then(() => location.reload());
-                } catch {
-                    Toast.fire({
-                        icon: "error",
-                        title: "Gagal menyimpan",
-                    });
-                } finally {
-                    this.isLoading = false;
-                }
-            },
-
-            async deleteData() {
-                this.isLoading = true;
-
-                try {
-                    let response = await fetch("/siswa/" + this.formData.id, {
-                        method: "DELETE",
-                        headers: {
-                            "Content-Type": "application/json",
-                            "X-CSRF-TOKEN": csrfToken,
-                        },
-                    });
-
-                    if (!response.ok) throw new Error();
-
-                    Toast.fire({
-                        icon: "success",
-                        title: "Data dihapus",
-                    }).then(() => location.reload());
-                } catch {
-                    Toast.fire({
-                        icon: "error",
-                        title: "Gagal hapus",
-                    });
-                } finally {
-                    this.isLoading = false;
                 }
             },
 
@@ -2256,31 +2316,66 @@ document.addEventListener("alpine:init", () => {
 
             init() {
                 this.$watch("paginatedStudents", () => {
-                    setTimeout(() => lucide.createIcons(), 50);
+                    setTimeout(
+                        () =>
+                            typeof lucide !== "undefined" &&
+                            lucide.createIcons(),
+                        50,
+                    );
                 });
                 this.$watch("drawerOpen", () => {
-                    setTimeout(() => lucide.createIcons(), 50);
+                    setTimeout(
+                        () =>
+                            typeof lucide !== "undefined" &&
+                            lucide.createIcons(),
+                        50,
+                    );
                 });
                 this.$watch("selectedPelanggaran", () => {
-                    setTimeout(() => lucide.createIcons(), 50);
+                    setTimeout(
+                        () =>
+                            typeof lucide !== "undefined" &&
+                            lucide.createIcons(),
+                        50,
+                    );
                 });
                 this.$watch("photoPreview", () => {
-                    setTimeout(() => lucide.createIcons(), 50);
+                    setTimeout(
+                        () =>
+                            typeof lucide !== "undefined" &&
+                            lucide.createIcons(),
+                        50,
+                    );
                 });
                 this.$watch("riwayatList", () => {
-                    setTimeout(() => lucide.createIcons(), 100);
+                    setTimeout(
+                        () =>
+                            typeof lucide !== "undefined" &&
+                            lucide.createIcons(),
+                        100,
+                    );
                 });
                 this.$watch("filterKelas", () => {
-                    setTimeout(() => lucide.createIcons(), 50);
-                });
-                this.$watch("fullscreenImage", () => {
-                    setTimeout(() => lucide.createIcons(), 50);
+                    setTimeout(
+                        () =>
+                            typeof lucide !== "undefined" &&
+                            lucide.createIcons(),
+                        50,
+                    );
                 });
                 this.$watch("sortByPoin", () => {
-                    setTimeout(() => lucide.createIcons(), 50);
+                    setTimeout(
+                        () =>
+                            typeof lucide !== "undefined" &&
+                            lucide.createIcons(),
+                        50,
+                    );
                 });
 
-                setTimeout(() => lucide.createIcons(), 100);
+                setTimeout(
+                    () => typeof lucide !== "undefined" && lucide.createIcons(),
+                    100,
+                );
             },
         }),
     );

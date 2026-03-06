@@ -14,7 +14,8 @@ class KelasController extends Controller
             'status' => 'required',
         ]);
 
-        Kelas::updateOrCreate(
+        // Simpan atau Update data
+        $kelas = Kelas::updateOrCreate(
             ['id_kelas' => $request->id],
             [
                 'kode_kelas' => strtoupper($request->kode_kelas),
@@ -22,12 +23,20 @@ class KelasController extends Controller
             ]
         );
 
-        return response()->json(['success' => 'Data Kelas berhasil disimpan!']);
+        // KITA UBAH RETURN-NYA DI SINI
+        // Kembalikan juga data $kelas yang baru disimpan agar bisa dibaca oleh Alpine.js
+        return response()->json([
+            'success' => 'Data Kelas berhasil disimpan!',
+            'data' => $kelas
+        ]);
     }
 
     public function destroy($id)
     {
         Kelas::destroy($id);
-        return response()->json(['success' => 'Data Kelas berhasil dihapus!']);
+
+        return response()->json([
+            'success' => 'Data Kelas berhasil dihapus!'
+        ]);
     }
 }

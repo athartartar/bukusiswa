@@ -7,28 +7,28 @@
 )'
     class="w-full max-w-7xl mx-auto font-sans text-gray-800">
     <x-slot name="header">
-        @if($usertype === 'siswa')
+        @if ($usertype === 'siswa')
             Riwayat Pelanggaran Saya
         @else
             Manajemen Data Siswa
         @endif
     </x-slot>
-    
+
     <!-- Info Banner untuk Siswa -->
-    @if($usertype === 'siswa')
-    <div class="mb-6 bg-blue-50 border border-blue-200 rounded-xl p-4">
-        <div class="flex items-center gap-3">
-            <div class="p-2 bg-blue-100 rounded-full">
-                <i data-lucide="info" class="w-5 h-5 text-blue-600"></i>
-            </div>
-            <div>
-                <p class="font-semibold text-blue-900">Mode Siswa</p>
-                <p class="text-sm text-blue-700">Anda hanya dapat melihat riwayat pelanggaran Anda sendiri</p>
+    @if ($usertype === 'siswa')
+        <div class="mb-6 bg-blue-50 border border-blue-200 rounded-xl p-4">
+            <div class="flex items-center gap-3">
+                <div class="p-2 bg-blue-100 rounded-full">
+                    <i data-lucide="info" class="w-5 h-5 text-blue-600"></i>
+                </div>
+                <div>
+                    <p class="font-semibold text-blue-900">Mode Siswa</p>
+                    <p class="text-sm text-blue-700">Anda hanya dapat melihat riwayat pelanggaran Anda sendiri</p>
+                </div>
             </div>
         </div>
-    </div>
     @endif
-    
+
     <!-- Filter dan Search Section - Hidden untuk siswa -->
     <div class="flex flex-col md:flex-row justify-between items-stretch md:items-center gap-4 mb-6" x-show="!isSiswa">
         <!-- Search Box -->
@@ -54,7 +54,8 @@
                     class="w-full md:w-40 pl-4 pr-10 py-2.5 text-left border bg-white focus:outline-none transition-all flex items-center justify-between relative z-10"
                     :class="open ? 'rounded-t-xl border-[#37517e] ring-2 ring-[#37517e]/20 border-b-transparent' :
                         'rounded-xl border-gray-200 group-hover:border-[#37517e]/50'">
-                    <span x-text="filterKelas === '' ? 'Semua Kelas' : filterKelas" class="block truncate font-medium text-gray-700 text-sm">
+                    <span x-text="filterKelas === '' ? 'Semua Kelas' : filterKelas"
+                        class="block truncate font-medium text-gray-700 text-sm">
                     </span>
 
                     <span
@@ -90,7 +91,7 @@
                                 display: none;
                             }
                         </style>
-                        
+
                         <li @click="filterKelas = ''; open = false; currentPage = 1"
                             class="cursor-pointer select-none relative py-2.5 pl-4 pr-9 text-sm hover:bg-indigo-50/80 transition-colors duration-150"
                             :class="filterKelas === '' ? 'bg-indigo-50 text-[#37517e] font-semibold' : 'text-gray-700'">
@@ -171,7 +172,8 @@
                         <template x-for="option in options" :key="option.value">
                             <li @click="sortByPoin = option.value; open = false; currentPage = 1"
                                 class="cursor-pointer select-none relative py-2.5 pl-4 pr-9 text-sm hover:bg-indigo-50/80 transition-colors duration-150"
-                                :class="sortByPoin === option.value ? 'bg-indigo-50 text-[#37517e] font-semibold' : 'text-gray-700'">
+                                :class="sortByPoin === option.value ? 'bg-indigo-50 text-[#37517e] font-semibold' :
+                                    'text-gray-700'">
                                 <span x-text="option.label" class="block truncate"></span>
                                 <span x-show="sortByPoin === option.value"
                                     class="absolute inset-y-0 right-0 flex items-center pr-3 text-[#37517e]">
@@ -186,7 +188,7 @@
                     </ul>
                 </div>
             </div>
-            
+
             <!-- Rows Per Page -->
             <div x-data="{
                 open: false,
@@ -255,8 +257,10 @@
                         <div class="absolute top-3 right-3">
                             <span class="px-3 py-1 rounded-full text-xs font-bold border shadow-sm"
                                 :class="{
-                                    'bg-emerald-50 text-emerald-600 border-emerald-200': (student.total_poin ?? 0) <= 49,
-                                    'bg-yellow-50 text-yellow-600 border-yellow-200': (student.total_poin ?? 0) >= 50 && (student.total_poin ?? 0) <= 74,
+                                    'bg-emerald-50 text-emerald-600 border-emerald-200': (student.total_poin ?? 0) <=
+                                        49,
+                                    'bg-yellow-50 text-yellow-600 border-yellow-200': (student.total_poin ?? 0) >= 50 &&
+                                        (student.total_poin ?? 0) <= 74,
                                     'bg-red-50 text-red-600 border-red-200': (student.total_poin ?? 0) >= 75
                                 }"
                                 x-text="student.total_poin ?? 0">
@@ -283,15 +287,13 @@
                         <div class="mt-5 flex gap-2">
 
                             <!-- catat pelanggaran - HIDDEN untuk siswa -->
-                            <button @click="openDrawer('tambahPelanggaran', student)"
-                                x-show="canCreate"
+                            <button @click="openDrawer('tambahPelanggaran', student)" x-show="canCreate"
                                 class="flex-1 text-xs bg-[#37517e] hover:bg-[#2c4064] text-white font-semibold py-2 rounded-lg shadow-sm transition">
                                 <i data-lucide="plus-circle" class="w-4 h-4 inline mr-1"></i>Catat
                             </button>
 
                             <!-- riwayat -->
-                            <button @click="openDrawer('riwayat', student)"
-                                :class="canCreate ? 'flex-1' : 'w-full'"
+                            <button @click="openDrawer('riwayat', student)" :class="canCreate ? 'flex-1' : 'w-full'"
                                 class="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-2 rounded-lg transition">
                                 <i data-lucide="history" class="w-4 h-4 inline mr-1"></i>Riwayat
                             </button>
@@ -309,8 +311,10 @@
                             </div>
                             <h3 class="text-gray-900 font-medium">Tidak ada data siswa</h3>
                             <p class="text-gray-500 text-sm mt-1">
-                                <span x-show="filterKelas !== ''">Tidak ada siswa di kelas <b x-text="filterKelas"></b></span>
-                                <span x-show="filterKelas === '' && search !== ''">Tidak ada hasil untuk "<b x-text="search"></b>"</span>
+                                <span x-show="filterKelas !== ''">Tidak ada siswa di kelas <b
+                                        x-text="filterKelas"></b></span>
+                                <span x-show="filterKelas === '' && search !== ''">Tidak ada hasil untuk "<b
+                                        x-text="search"></b>"</span>
                                 <span x-show="filterKelas === '' && search === ''">Belum ada data siswa</span>
                             </p>
                         </div>
@@ -351,7 +355,8 @@
                     </button>
                 </template>
 
-                <button @click="currentPage < totalPages ? currentPage++ : null" :disabled="currentPage === totalPages"
+                <button @click="currentPage < totalPages ? currentPage++ : null"
+                    :disabled="currentPage === totalPages"
                     class="px-3 py-2 rounded-md border border-gray-200 bg-white text-gray-500 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition">
                     <i data-lucide="chevron-right" class="w-4 h-4"></i>
                 </button>
@@ -360,7 +365,8 @@
     </div>
 
     <!-- DRAWER CATAT PELANGGARAN - TIDAK MUNCUL untuk siswa -->
-    <div x-show="drawerOpen && drawerMode === 'tambahPelanggaran' && canCreate" class="relative z-50" style="z-index: 100; display: none;">
+    <div x-show="drawerOpen && drawerMode === 'tambahPelanggaran' && canCreate" class="relative z-50"
+        style="z-index: 100; display: none;">
         <div x-show="drawerOpen" @click="drawerOpen = false"
             class="fixed inset-0 bg-[#37517e]/20 backdrop-blur-sm transition-opacity"></div>
 
@@ -375,7 +381,8 @@
                 <div class="pr-4">
                     <h2 class="text-xl font-bold text-[#37517e]">Catat Pelanggaran</h2>
                     <p class="text-sm text-gray-500 mt-2 leading-relaxed">
-                        <span x-text="selectedStudent?.name"></span> - <span class="font-mono" x-text="selectedStudent?.nis"></span>
+                        <span x-text="selectedStudent?.name"></span> - <span class="font-mono"
+                            x-text="selectedStudent?.nis"></span>
                     </p>
                 </div>
                 <button @click="drawerOpen = false"
@@ -385,7 +392,7 @@
             </div>
 
             <div class="flex-1 overflow-y-auto p-6 space-y-6">
-                
+
                 <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 flex items-center gap-3">
                     <div class="p-2 bg-blue-100 rounded-full">
                         <i data-lucide="info" class="w-5 h-5 text-blue-600"></i>
@@ -408,8 +415,7 @@
                                 :class="selectedPelanggaran[item.id] ? 'bg-indigo-50 border-[#37517e]' : 'bg-white'">
                                 <label class="flex items-center justify-between cursor-pointer">
                                     <div class="flex items-center gap-3">
-                                        <input type="checkbox" 
-                                            :id="'pel-' + item.id"
+                                        <input type="checkbox" :id="'pel-' + item.id"
                                             @change="togglePelanggaran(item.id, item.jenis, item.poin)"
                                             :checked="selectedPelanggaran[item.id]"
                                             class="w-5 h-5 text-[#37517e] border-gray-300 rounded focus:ring-2 focus:ring-[#37517e]/20">
@@ -418,19 +424,17 @@
                                             <p class="text-xs text-gray-500"><span x-text="item.poin"></span> Poin</p>
                                         </div>
                                     </div>
-                                    <span class="px-2.5 py-1 rounded-lg text-xs font-bold bg-yellow-100 text-yellow-700" x-text="'+' + item.poin"></span>
+                                    <span
+                                        class="px-2.5 py-1 rounded-lg text-xs font-bold bg-yellow-100 text-yellow-700"
+                                        x-text="'+' + item.poin"></span>
                                 </label>
-                                
-                                <div x-show="selectedPelanggaran[item.id]" 
-                                    x-transition
+
+                                <div x-show="selectedPelanggaran[item.id]" x-transition
                                     class="mt-3 pt-3 border-t border-gray-200">
-                                    <input type="file" 
-                                        :id="'file-' + item.id"
-                                        @change="handleFileUpload($event, item.id)"
-                                        accept="image/*"
-                                        :capture="isMobile ? 'environment' : false"
-                                        class="hidden">
-                                    
+                                    <input type="file" :id="'file-' + item.id"
+                                        @change="handleFileUpload($event, item.id)" accept="image/*"
+                                        :capture="isMobile ? 'environment' : false" class="hidden">
+
                                     <div x-show="!photoPreview[item.id]">
                                         <button type="button"
                                             @click="document.getElementById('file-' + item.id).click()"
@@ -440,17 +444,17 @@
                                             <span class="text-xs text-gray-500">(Opsional)</span>
                                         </button>
                                     </div>
-                                    
+
                                     <div x-show="photoPreview[item.id]" class="relative">
-                                        <img :src="photoPreview[item.id]" 
+                                        <img :src="photoPreview[item.id]"
                                             @click="openFullscreen(photoPreview[item.id])"
                                             class="w-full h-32 object-cover rounded-lg border border-gray-200 cursor-pointer hover:opacity-90 transition">
-                                        <button type="button"
-                                            @click="removePhoto(item.id)"
+                                        <button type="button" @click="removePhoto(item.id)"
                                             class="absolute top-2 right-2 p-1.5 bg-red-500 hover:bg-red-600 text-white rounded-full shadow-lg transition">
                                             <i data-lucide="x" class="w-4 h-4"></i>
                                         </button>
-                                        <p class="text-xs text-gray-500 mt-1 text-center">Klik foto untuk fullscreen • Auto-compress max 500KB</p>
+                                        <p class="text-xs text-gray-500 mt-1 text-center">Klik foto untuk fullscreen •
+                                            Auto-compress max 500KB</p>
                                     </div>
                                 </div>
                             </div>
@@ -470,8 +474,7 @@
                                 :class="selectedPelanggaran[item.id] ? 'bg-indigo-50 border-[#37517e]' : 'bg-white'">
                                 <label class="flex items-center justify-between cursor-pointer">
                                     <div class="flex items-center gap-3">
-                                        <input type="checkbox" 
-                                            :id="'pel-' + item.id"
+                                        <input type="checkbox" :id="'pel-' + item.id"
                                             @change="togglePelanggaran(item.id, item.jenis, item.poin)"
                                             :checked="selectedPelanggaran[item.id]"
                                             class="w-5 h-5 text-[#37517e] border-gray-300 rounded focus:ring-2 focus:ring-[#37517e]/20">
@@ -480,19 +483,17 @@
                                             <p class="text-xs text-gray-500"><span x-text="item.poin"></span> Poin</p>
                                         </div>
                                     </div>
-                                    <span class="px-2.5 py-1 rounded-lg text-xs font-bold bg-orange-100 text-orange-700" x-text="'+' + item.poin"></span>
+                                    <span
+                                        class="px-2.5 py-1 rounded-lg text-xs font-bold bg-orange-100 text-orange-700"
+                                        x-text="'+' + item.poin"></span>
                                 </label>
-                                
-                                <div x-show="selectedPelanggaran[item.id]" 
-                                    x-transition
+
+                                <div x-show="selectedPelanggaran[item.id]" x-transition
                                     class="mt-3 pt-3 border-t border-gray-200">
-                                    <input type="file" 
-                                        :id="'file-' + item.id"
-                                        @change="handleFileUpload($event, item.id)"
-                                        accept="image/*"
-                                        :capture="isMobile ? 'environment' : false"
-                                        class="hidden">
-                                    
+                                    <input type="file" :id="'file-' + item.id"
+                                        @change="handleFileUpload($event, item.id)" accept="image/*"
+                                        :capture="isMobile ? 'environment' : false" class="hidden">
+
                                     <div x-show="!photoPreview[item.id]">
                                         <button type="button"
                                             @click="document.getElementById('file-' + item.id).click()"
@@ -502,17 +503,17 @@
                                             <span class="text-xs text-gray-500">(Opsional)</span>
                                         </button>
                                     </div>
-                                    
+
                                     <div x-show="photoPreview[item.id]" class="relative">
-                                        <img :src="photoPreview[item.id]" 
+                                        <img :src="photoPreview[item.id]"
                                             @click="openFullscreen(photoPreview[item.id])"
                                             class="w-full h-32 object-cover rounded-lg border border-gray-200 cursor-pointer hover:opacity-90 transition">
-                                        <button type="button"
-                                            @click="removePhoto(item.id)"
+                                        <button type="button" @click="removePhoto(item.id)"
                                             class="absolute top-2 right-2 p-1.5 bg-red-500 hover:bg-red-600 text-white rounded-full shadow-lg transition">
                                             <i data-lucide="x" class="w-4 h-4"></i>
                                         </button>
-                                        <p class="text-xs text-gray-500 mt-1 text-center">Klik foto untuk fullscreen • Auto-compress max 500KB</p>
+                                        <p class="text-xs text-gray-500 mt-1 text-center">Klik foto untuk fullscreen •
+                                            Auto-compress max 500KB</p>
                                     </div>
                                 </div>
                             </div>
@@ -532,8 +533,7 @@
                                 :class="selectedPelanggaran[item.id] ? 'bg-indigo-50 border-[#37517e]' : 'bg-white'">
                                 <label class="flex items-center justify-between cursor-pointer">
                                     <div class="flex items-center gap-3">
-                                        <input type="checkbox" 
-                                            :id="'pel-' + item.id"
+                                        <input type="checkbox" :id="'pel-' + item.id"
                                             @change="togglePelanggaran(item.id, item.jenis, item.poin)"
                                             :checked="selectedPelanggaran[item.id]"
                                             class="w-5 h-5 text-[#37517e] border-gray-300 rounded focus:ring-2 focus:ring-[#37517e]/20">
@@ -542,19 +542,16 @@
                                             <p class="text-xs text-gray-500"><span x-text="item.poin"></span> Poin</p>
                                         </div>
                                     </div>
-                                    <span class="px-2.5 py-1 rounded-lg text-xs font-bold bg-red-100 text-red-700" x-text="'+' + item.poin"></span>
+                                    <span class="px-2.5 py-1 rounded-lg text-xs font-bold bg-red-100 text-red-700"
+                                        x-text="'+' + item.poin"></span>
                                 </label>
-                                
-                                <div x-show="selectedPelanggaran[item.id]" 
-                                    x-transition
+
+                                <div x-show="selectedPelanggaran[item.id]" x-transition
                                     class="mt-3 pt-3 border-t border-gray-200">
-                                    <input type="file" 
-                                        :id="'file-' + item.id"
-                                        @change="handleFileUpload($event, item.id)"
-                                        accept="image/*"
-                                        :capture="isMobile ? 'environment' : false"
-                                        class="hidden">
-                                    
+                                    <input type="file" :id="'file-' + item.id"
+                                        @change="handleFileUpload($event, item.id)" accept="image/*"
+                                        :capture="isMobile ? 'environment' : false" class="hidden">
+
                                     <div x-show="!photoPreview[item.id]">
                                         <button type="button"
                                             @click="document.getElementById('file-' + item.id).click()"
@@ -564,17 +561,17 @@
                                             <span class="text-xs text-gray-500">(Opsional)</span>
                                         </button>
                                     </div>
-                                    
+
                                     <div x-show="photoPreview[item.id]" class="relative">
-                                        <img :src="photoPreview[item.id]" 
+                                        <img :src="photoPreview[item.id]"
                                             @click="openFullscreen(photoPreview[item.id])"
                                             class="w-full h-32 object-cover rounded-lg border border-gray-200 cursor-pointer hover:opacity-90 transition">
-                                        <button type="button"
-                                            @click="removePhoto(item.id)"
+                                        <button type="button" @click="removePhoto(item.id)"
                                             class="absolute top-2 right-2 p-1.5 bg-red-500 hover:bg-red-600 text-white rounded-full shadow-lg transition">
                                             <i data-lucide="x" class="w-4 h-4"></i>
                                         </button>
-                                        <p class="text-xs text-gray-500 mt-1 text-center">Klik foto untuk fullscreen • Auto-compress max 500KB</p>
+                                        <p class="text-xs text-gray-500 mt-1 text-center">Klik foto untuk fullscreen •
+                                            Auto-compress max 500KB</p>
                                     </div>
                                 </div>
                             </div>
@@ -583,9 +580,9 @@
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1.5">Keterangan Tambahan (Opsional)</label>
-                    <textarea x-model="keteranganTambahan" rows="3" 
-                        placeholder="Tambahkan keterangan jika diperlukan..."
+                    <label class="block text-sm font-medium text-gray-700 mb-1.5">Keterangan Tambahan
+                        (Opsional)</label>
+                    <textarea x-model="keteranganTambahan" rows="3" placeholder="Tambahkan keterangan jika diperlukan..."
                         class="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-[#37517e] focus:ring-2 focus:ring-[#37517e]/20 outline-none transition-all placeholder:text-gray-400 resize-none"></textarea>
                 </div>
             </div>
@@ -596,7 +593,8 @@
                     Batal
                 </button>
 
-                <button @click="savePelanggaranBatch()" :disabled="isLoading || Object.keys(selectedPelanggaran).length === 0"
+                <button @click="savePelanggaranBatch()"
+                    :disabled="isLoading || Object.keys(selectedPelanggaran).length === 0"
                     class="flex-[2] px-4 py-2.5 bg-[#37517e] text-white rounded-xl font-medium hover:bg-[#2a3f63] shadow-lg shadow-[#37517e]/20 transition flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
                     <i x-show="!isLoading" data-lucide="save" class="w-4 h-4"></i>
                     <svg x-show="isLoading" class="animate-spin h-4 w-4 text-white"
@@ -629,13 +627,16 @@
                 <div class="pr-4">
                     <h2 class="text-xl font-bold text-[#37517e]">Riwayat Pelanggaran</h2>
                     <p class="text-sm text-gray-500 mt-2 leading-relaxed">
-                        <span x-text="selectedStudent?.name"></span> - <span class="font-mono" x-text="selectedStudent?.nis"></span>
+                        <span x-text="selectedStudent?.name"></span> - <span class="font-mono"
+                            x-text="selectedStudent?.nis"></span>
                     </p>
                     <div class="mt-3">
                         <span class="px-3 py-1 rounded-full text-xs font-bold border shadow-sm"
                             :class="{
-                                'bg-emerald-50 text-emerald-600 border-emerald-200': (selectedStudent?.total_poin ?? 0) <= 49,
-                                'bg-yellow-50 text-yellow-600 border-yellow-200': (selectedStudent?.total_poin ?? 0) >= 50 && (selectedStudent?.total_poin ?? 0) <= 74,
+                                'bg-emerald-50 text-emerald-600 border-emerald-200': (selectedStudent?.total_poin ??
+                                    0) <= 49,
+                                'bg-yellow-50 text-yellow-600 border-yellow-200': (selectedStudent?.total_poin ?? 0) >=
+                                    50 && (selectedStudent?.total_poin ?? 0) <= 74,
                                 'bg-red-50 text-red-600 border-red-200': (selectedStudent?.total_poin ?? 0) >= 75
                             }">
                             Total Poin: <span x-text="selectedStudent?.total_poin ?? 0"></span>
@@ -652,8 +653,8 @@
                 <!-- Loading State -->
                 <div x-show="isLoadingRiwayat" class="text-center py-16">
                     <div class="flex flex-col items-center">
-                        <svg class="animate-spin h-8 w-8 text-[#37517e] mb-3"
-                            xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <svg class="animate-spin h-8 w-8 text-[#37517e] mb-3" xmlns="http://www.w3.org/2000/svg"
+                            fill="none" viewBox="0 0 24 24">
                             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
                                 stroke-width="4"></circle>
                             <path class="opacity-75" fill="currentColor"
@@ -679,36 +680,37 @@
 
                 <!-- Riwayat List dengan TOMBOL DELETE -->
                 <div class="space-y-4" x-show="!isLoadingRiwayat && riwayatList.length > 0">
-                    <template x-for="(item, index) in riwayatList" :key="index">
+                    <template x-for="item in riwayatList" :key="item.id_pelanggaran">
                         <div class="bg-white border border-gray-200 rounded-xl p-4 hover:shadow-md transition">
                             <div class="flex items-start justify-between mb-2">
                                 <h4 class="font-semibold text-gray-800 flex-1" x-text="item.jenis_pelanggaran"></h4>
                                 <div class="flex items-center gap-2">
-                                    <span class="px-2.5 py-1 rounded-lg text-xs font-bold bg-red-50 text-red-600 border border-red-200">
+                                    <span
+                                        class="px-2.5 py-1 rounded-lg text-xs font-bold bg-red-50 text-red-600 border border-red-200">
                                         +<span x-text="item.poin"></span> Poin
                                     </span>
-                                    
+
                                     <!-- TOMBOL DELETE - Tampil jika can_delete true -->
-                                    <button x-show="item.can_delete"
-                                        @click="deletePelanggaran(item.id_pelanggaran)"
+                                    <button x-show="item.can_delete" @click="deletePelanggaran(item.id_pelanggaran)"
                                         class="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition"
                                         title="Hapus pelanggaran">
                                         <i data-lucide="trash-2" class="w-4 h-4"></i>
                                     </button>
                                 </div>
                             </div>
-                            
+
                             <!-- Foto Bukti -->
                             <div x-show="item.bukti_foto" class="my-3">
-                                <img :src="'/storage/' + item.bukti_foto" 
+                                <img :src="'/storage/' + item.bukti_foto"
                                     @click="openFullscreen('/storage/' + item.bukti_foto)"
                                     class="w-full h-40 object-cover rounded-lg border border-gray-200 cursor-pointer hover:opacity-90 transition"
                                     :alt="item.jenis_pelanggaran">
                                 <p class="text-xs text-gray-500 mt-1 text-center">Klik untuk melihat fullscreen</p>
                             </div>
-                            
-                            <p class="text-sm text-gray-600 mb-3" x-text="item.keterangan || 'Tidak ada keterangan.'"></p>
-                            
+
+                            <p class="text-sm text-gray-600 mb-3" x-text="item.keterangan || 'Tidak ada keterangan.'">
+                            </p>
+
                             <div class="flex items-center justify-between text-xs text-gray-500">
                                 <div class="flex items-center gap-2">
                                     <i data-lucide="calendar" class="w-3.5 h-3.5"></i>
@@ -734,25 +736,18 @@
     </div>
 
     <!-- FULLSCREEN IMAGE MODAL -->
-    <div x-show="fullscreenImage" 
-        @click="fullscreenImage = null"
+    <div x-show="fullscreenImage" @click="fullscreenImage = null"
         class="fixed inset-0 z-[200] bg-black/90 flex items-center justify-center p-4"
-        x-transition:enter="transition ease-out duration-300"
-        x-transition:enter-start="opacity-0"
-        x-transition:enter-end="opacity-100"
-        x-transition:leave="transition ease-in duration-200"
-        x-transition:leave-start="opacity-100"
-        x-transition:leave-end="opacity-0"
-        style="display: none;">
-        
+        x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0"
+        x-transition:enter-end="opacity-100" x-transition:leave="transition ease-in duration-200"
+        x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" style="display: none;">
+
         <button @click.stop="fullscreenImage = null"
             class="absolute top-4 right-4 p-3 bg-white/10 hover:bg-white/20 text-white rounded-full backdrop-blur-sm transition z-10">
             <i data-lucide="x" class="w-6 h-6"></i>
         </button>
-        
-        <img :src="fullscreenImage" 
-            @click.stop
-            class="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
+
+        <img :src="fullscreenImage" @click.stop class="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
             alt="Foto Bukti Fullscreen">
     </div>
 </div>

@@ -110,7 +110,7 @@
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-50">
-                    <template x-for="user in paginatedUsers" :key="user.id_user">
+                    <template x-for="user in paginatedUsers" :key="user.username">
                         <tr class="group hover:bg-blue-50/30 transition-colors duration-200">
                             {{-- USERNAME --}}
                             <td class="px-6 py-4 font-mono text-sm text-gray-600">

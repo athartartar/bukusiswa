@@ -152,7 +152,9 @@ class Pelanggaran extends Component
                 ->orderBy('namalengkap')
                 ->get()
                 ->map(function ($student) {
-                    $student->total_poin = PelanggaranModel::where('id_siswa', $student->id)->sum('poin');
+                    $poinPelanggaran = PelanggaranModel::where('id_siswa', $student->id)->sum('poin');
+                    $poinPembinaan = \App\Models\Pembinaan::where('id_siswa', $student->id)->sum('pengurangan_poin');
+                    $student->total_poin = max(0, $poinPelanggaran - $poinPembinaan);
                     return $student;
                 });
         }

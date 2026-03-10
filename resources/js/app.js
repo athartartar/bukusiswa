@@ -1775,6 +1775,17 @@ document.addEventListener("alpine:init", () => {
             students: initialStudents,
             selectedStudent: null,
             riwayatList: [],
+            filterRiwayat: "semua",
+
+            get filteredRiwayat() {
+                if (this.filterRiwayat === "pelanggaran") {
+                    return this.riwayatList.filter(item => item.type === "pelanggaran");
+                }
+                if (this.filterRiwayat === "pembinaan") {
+                    return this.riwayatList.filter(item => item.type === "pembinaan");
+                }
+                return this.riwayatList;
+            },
 
             usertype: usertype || "guest",
             currentSiswaId: currentSiswaId || null,
@@ -1805,6 +1816,13 @@ document.addEventListener("alpine:init", () => {
             photoPreview: {},
             keteranganTambahan: "",
             fullscreenImage: null,
+
+            formPembinaan: {
+                tindakan: "",
+                feedback: "",
+                pengurangan_poin: 0
+            },
+            isLoadingPembinaan: false,
 
             get isMobile() {
                 return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
@@ -2095,14 +2113,23 @@ document.addEventListener("alpine:init", () => {
                     this.keteranganTambahan = "";
                 }
 
+                if (mode === "tindakPembinaan" || mode === "tindakSP") {
+                    this.formPembinaan = {
+                        tindakan: "",
+                        feedback: "",
+                        pengurangan_poin: mode === "tindakSP" ? 0 : "" // SP tidak ngurangin poin
+                    };
+                }
+
                 if (mode === "riwayat") {
+                    this.filterRiwayat = "semua";
                     this.loadRiwayat(student.id || student.id_siswa);
                 }
 
                 this.drawerOpen = true;
             },
 
-            async loadRiwayat(studentId) {
+                async loadRiwayat(studentId) {
                 this.isLoadingRiwayat = true;
                 this.riwayatList = [];
                 try {
@@ -2116,6 +2143,12 @@ document.addEventListener("alpine:init", () => {
                     });
                 } finally {
                     this.isLoadingRiwayat = false;
+                    setTimeout(
+                        () =>
+                            typeof lucide !== "undefined" &&
+                            lucide.createIcons(),
+                        100,
+                    );
                 }
             },
 
@@ -2250,6 +2283,65 @@ document.addEventListener("alpine:init", () => {
                 }
             },
 
+// ================= SUBMIT PEMBINAAN & SP =================
+            async submitPembinaan() {
+                if (!this.formPembinaan.tindakan) {
+                    return Toast.fire({
+                        icon: "warning",
+                        title: "Pilih tindakan terlebih dahulu!",
+                    });
+                }
+
+                this.isLoadingPembinaan = true;
+
+                try {
+                    const formData = new FormData();
+                    formData.append("id_siswa", this.selectedStudent.id || this.selectedStudent.id_siswa);
+                    formData.append("tindakan", this.formPembinaan.tindakan);
+                    formData.append("feedback", this.formPembinaan.feedback || "");
+                    
+                    // Kalau ini mode SP dari kesiswaan, pengurangan poin selalu 0
+                    let poinKurang = this.drawerMode === 'tindakSP' ? 0 : (this.formPembinaan.pengurangan_poin || 0);
+                    formData.append("pengurangan_poin", poinKurang);
+
+                    const response = await fetch("/pembinaan/store", {
+                        method: "POST",
+                        headers: {
+                            "X-CSRF-TOKEN": csrfToken,
+                            Accept: "application/json",
+                        },
+                        body: formData,
+                    });
+
+                    const data = await response.json();
+
+                    if (!response.ok) {
+                        throw new Error(data.message || "Gagal menyimpan pembinaan");
+                    }
+
+                    // Berhasil
+                    this.drawerOpen = false;
+
+                    // Update total poin siswa secara realtime di UI
+                    if (data.total_poin !== undefined) {
+                        this.updateSiswaPoin(this.selectedStudent.id || this.selectedStudent.id_siswa, data.total_poin);
+                    }
+
+                    Toast.fire({
+                        icon: "success",
+                        title: this.drawerMode === 'tindakSP' ? "Surat Peringatan dicatat!" : "Pembinaan berhasil dicatat!",
+                    });
+
+                } catch (error) {
+                    Toast.fire({
+                        icon: "error",
+                        title: error.message || "Terjadi kesalahan sistem",
+                    });
+                } finally {
+                    this.isLoadingPembinaan = false;
+                }
+            },
+
             // ================= DELETE PELANGGARAN (SEAMLESS) =================
             async deletePelanggaran(id_pelanggaran) {
                 const result = await Swal.fire({
@@ -2347,12 +2439,12 @@ document.addEventListener("alpine:init", () => {
                         50,
                     );
                 });
-                this.$watch("riwayatList", () => {
+                this.$watch("filterRiwayat", () => {
                     setTimeout(
                         () =>
                             typeof lucide !== "undefined" &&
                             lucide.createIcons(),
-                        100,
+                        50,
                     );
                 });
                 this.$watch("filterKelas", () => {

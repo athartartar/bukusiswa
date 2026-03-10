@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Pelanggaran;
 use App\Models\Siswa;
+use App\Models\Pembinaan;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Kreait\Firebase\Factory;
@@ -117,25 +118,47 @@ class PelanggaranController extends Controller
             }
         }
 
-        $riwayat = Pelanggaran::where('id_siswa', $id_siswa)
-            ->orderBy('created_at', 'desc')
-            ->get()
-            ->map(function ($item) use ($user) {
-                $item->can_delete = false;
-
-                if ($user) {
-                    if ($user->usertype === 'admin') {
-                        $item->can_delete = true;
-                    } else {
-                        $userName = $user->namalengkap ?? $user->username;
-                        if ($item->dicatat_oleh === $userName) {
-                            $item->can_delete = true;
-                        }
+$pelanggaran = Pelanggaran::where('id_siswa', $id_siswa)->get()->map(function ($item) use ($user) {
+            $canDelete = false;
+            if ($user) {
+                if ($user->usertype === 'admin') {
+                    $canDelete = true;
+                } else {
+                    $userName = $user->namalengkap ?? $user->username;
+                    if ($item->dicatat_oleh === $userName) {
+                        $canDelete = true;
                     }
                 }
+            }
 
-                return $item;
-            });
+            return [
+                'id' => $item->id_pelanggaran,
+                'type' => 'pelanggaran',
+                'judul' => $item->jenis_pelanggaran,
+                'poin' => $item->poin,
+                'keterangan' => $item->keterangan,
+                'aktor' => $item->dicatat_oleh,
+                'bukti_foto' => $item->bukti_foto,
+                'tanggal' => $item->created_at,
+                'can_delete' => $canDelete
+            ];
+        });
+
+        $pembinaan = \App\Models\Pembinaan::where('id_siswa', $id_siswa)->get()->map(function ($item) {
+            return [
+                'id' => $item->id_pembinaan,
+                'type' => 'pembinaan',
+                'judul' => $item->tindakan,
+                'poin' => $item->pengurangan_poin,
+                'keterangan' => $item->feedback,
+                'aktor' => $item->dibina_oleh,
+                'bukti_foto' => null,
+                'tanggal' => $item->created_at,
+                'can_delete' => false
+            ];
+        });
+
+        $riwayat = $pelanggaran->concat($pembinaan)->sortByDesc('tanggal')->values();
 
         return response()->json($riwayat);
     }
@@ -147,7 +170,14 @@ class PelanggaranController extends Controller
             $totalPoin = 0;
 
             if ($siswa) {
-                $totalPoin = Pelanggaran::where('id_siswa', $id_siswa)->sum('poin');
+                $poinPelanggaran = Pelanggaran::where('id_siswa', $id_siswa)->sum('poin');
+                $poinPengurangan = Pembinaan::where('id_siswa', $id_siswa)->sum('pengurangan_poin');
+                
+                $totalPoin = $poinPelanggaran - $poinPengurangan;
+                
+                if ($totalPoin < 0) {
+                    $totalPoin = 0;
+                }
 
                 if (isset($siswa->total_poin) || array_key_exists('total_poin', $siswa->getAttributes())) {
                     $siswa->update(['total_poin' => $totalPoin]);
@@ -225,10 +255,38 @@ class PelanggaranController extends Controller
         $totalPoinBaru = $this->updateTotalPoin($id_siswa);
         $this->updateTotalPoin($id_siswa);
 
-        return response()->json([
+    return response()->json([
             'success' => true,
             'message' => 'Pelanggaran berhasil dihapus',
-            'total_poin' => $totalPoinBaru // <--- TAMBAHAN INI
+            'total_poin' => $totalPoinBaru
         ]);
+    }
+
+    public function storePembinaan(Request $request)
+    {
+        $request->validate([
+            'id_siswa' => 'required|exists:siswas,id_siswa',
+            'tindakan' => 'required|string',
+            'feedback' => 'nullable|string',
+            'pengurangan_poin' => 'nullable|integer|min:0'
+        ]);
+
+        $dicatatOleh = Auth::check() ? (Auth::user()->namalengkap ?? Auth::user()->username) : 'admin';
+
+        Pembinaan::create([
+            'id_siswa' => $request->id_siswa,
+            'tanggal' => now()->format('Y-m-d'),
+            'dibina_oleh' => $dicatatOleh,
+            'tindakan' => $request->tindakan,
+            'feedback' => $request->feedback,
+            'pengurangan_poin' => $request->pengurangan_poin ?? 0
+        ]);
+
+        $totalPoin = $this->updateTotalPoin($request->id_siswa);
+
+        return response()->json([
+            'success' => true,
+            'total_poin' => $totalPoin
+        ], 201);
     }
 }

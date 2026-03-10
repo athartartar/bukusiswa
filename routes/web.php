@@ -56,6 +56,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/pelanggaran/store', [PelanggaranController::class, 'store'])->name('pelanggaran.store');
     Route::delete('/pelanggaran/{id}', [PelanggaranController::class, 'destroy'])->name('pelanggaran.destroy');
     Route::delete('/pelanggaran/{id_pelanggaran}', [PelanggaranController::class, 'destroy']);
+    Route::post('/pembinaan/store', [PelanggaranController::class, 'storePembinaan'])->name('pembinaan.store');
     Route::get('/pelanggaran/riwayat/{id_siswa}', [PelanggaranController::class, 'riwayat'])->name('pelanggaran.riwayat');
 
     // Route Logout (Wajib ada biar tombol di sidebar jalan)

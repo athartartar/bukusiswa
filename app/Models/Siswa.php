@@ -11,11 +11,21 @@ class Siswa extends Model
 
     protected $primaryKey = 'id_siswa';
 
-    protected $fillable = [
+protected $fillable = [
         'nis',
         'namalengkap',
         'jeniskelamin',
         'kelas',
         'id_user'
     ];
+
+    public function pelanggarans()
+    {
+        return $this->hasMany(Pelanggaran::class, 'id_siswa', 'id_siswa');
+    }
+
+    public function pembinaans()
+    {
+        return $this->hasMany(Pembinaan::class, 'id_siswa', 'id_siswa');
+    }
 }

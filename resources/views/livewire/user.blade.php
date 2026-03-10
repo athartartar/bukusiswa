@@ -330,7 +330,8 @@
                                 { value: 'admin', label: 'Admin' },
                                 { value: 'siswa', label: 'Siswa' },
                                 { value: 'ortu', label: 'Orang Tua' },
-                                { value: 'guruwali', label: 'Guru Wali' }
+                                { value: 'guruwali', label: 'Guru Wali' },
+                                { value: 'kesiswaan', label: 'Kesiswaan' }
                             ],
                             get currentLabel() {
                                 let selected = this.options.find(o => o.value === formData.usertype);

@@ -144,7 +144,9 @@ $pelanggaran = Pelanggaran::where('id_siswa', $id_siswa)->get()->map(function ($
             ];
         });
 
-        $pembinaan = \App\Models\Pembinaan::where('id_siswa', $id_siswa)->get()->map(function ($item) {
+        $pembinaan = \App\Models\Pembinaan::where('id_siswa', $id_siswa)
+            ->where('tindakan', 'not like', '%SP %')
+            ->get()->map(function ($item) {
             return [
                 'id' => $item->id_pembinaan,
                 'type' => 'pembinaan',
@@ -273,7 +275,7 @@ $pelanggaran = Pelanggaran::where('id_siswa', $id_siswa)->get()->map(function ($
 
         $dicatatOleh = Auth::check() ? (Auth::user()->namalengkap ?? Auth::user()->username) : 'admin';
 
-        Pembinaan::create([
+        $pembinaanBaru = Pembinaan::create([
             'id_siswa' => $request->id_siswa,
             'tanggal' => now()->format('Y-m-d'),
             'dibina_oleh' => $dicatatOleh,
@@ -286,7 +288,8 @@ $pelanggaran = Pelanggaran::where('id_siswa', $id_siswa)->get()->map(function ($
 
         return response()->json([
             'success' => true,
-            'total_poin' => $totalPoin
+            'total_poin' => $totalPoin,
+            'data_baru' => $pembinaanBaru
         ], 201);
     }
 }

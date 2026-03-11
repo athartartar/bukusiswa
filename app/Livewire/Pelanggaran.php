@@ -103,13 +103,20 @@ class Pelanggaran extends Component
                     ->orderBy('id_pelanggaran', 'desc')
                     ->get();
 
+                $spRecords = \App\Models\Pembinaan::where('id_siswa', $siswa->id_siswa)
+                    ->where('tindakan', 'like', '%SP %')
+                    ->orderBy('created_at', 'desc')
+                    ->get();
+
                 $students = collect([
                     (object)[
                         'id' => $siswa->id_siswa,
                         'name' => $siswa->namalengkap,
                         'class' => $siswa->kelas,
                         'nis' => $siswa->nis,
-                        'total_poin' => max(0, PelanggaranModel::where('id_siswa', $siswa->id_siswa)->sum('poin') - \App\Models\Pembinaan::where('id_siswa', $siswa->id_siswa)->sum('pengurangan_poin'))
+                        'total_poin' => max(0, PelanggaranModel::where('id_siswa', $siswa->id_siswa)->sum('poin') - \App\Models\Pembinaan::where('id_siswa', $siswa->id_siswa)->sum('pengurangan_poin')),
+                        'sp_status' => $spRecords->first()->tindakan ?? null,
+                        'sp_history' => $spRecords
                     ]
                 ]);
             }
@@ -131,11 +138,20 @@ class Pelanggaran extends Component
                     ->orderBy('namalengkap')
                     ->get()
                     ->map(function ($student) {
-                        $poinPelanggaran = PelanggaranModel::where('id_siswa', $student->id)->sum('poin');
-                        $poinPembinaan = \App\Models\Pembinaan::where('id_siswa', $student->id)->sum('pengurangan_poin');
-                        $student->total_poin = max(0, $poinPelanggaran - $poinPembinaan);
-                        return $student;
-                    });
+                    $poinPelanggaran = PelanggaranModel::where('id_siswa', $student->id)->sum('poin');
+                    $poinPembinaan = \App\Models\Pembinaan::where('id_siswa', $student->id)->sum('pengurangan_poin');
+                    $student->total_poin = max(0, $poinPelanggaran - $poinPembinaan);
+                    
+                    $spRecords = \App\Models\Pembinaan::where('id_siswa', $student->id)
+                        ->where('tindakan', 'like', '%SP %')
+                        ->orderBy('created_at', 'desc')
+                        ->get();
+                        
+                    $student->sp_status = $spRecords->first()->tindakan ?? null;
+                    $student->sp_history = $spRecords;
+                    
+                    return $student;
+                });
             } else {
                 // Jika plot walas tidak ditemukan, kosongkan data
                 $data = collect([]);
@@ -155,6 +171,15 @@ class Pelanggaran extends Component
                     $poinPelanggaran = PelanggaranModel::where('id_siswa', $student->id)->sum('poin');
                     $poinPembinaan = \App\Models\Pembinaan::where('id_siswa', $student->id)->sum('pengurangan_poin');
                     $student->total_poin = max(0, $poinPelanggaran - $poinPembinaan);
+                    
+                    $spRecords = \App\Models\Pembinaan::where('id_siswa', $student->id)
+                        ->where('tindakan', 'like', '%SP %')
+                        ->orderBy('created_at', 'desc')
+                        ->get();
+                        
+                    $student->sp_status = $spRecords->first()->tindakan ?? null;
+                    $student->sp_history = $spRecords;
+                    
                     return $student;
                 });
         }

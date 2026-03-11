@@ -1779,10 +1779,14 @@ document.addEventListener("alpine:init", () => {
 
             get filteredRiwayat() {
                 if (this.filterRiwayat === "pelanggaran") {
-                    return this.riwayatList.filter(item => item.type === "pelanggaran");
+                    return this.riwayatList.filter(
+                        (item) => item.type === "pelanggaran",
+                    );
                 }
                 if (this.filterRiwayat === "pembinaan") {
-                    return this.riwayatList.filter(item => item.type === "pembinaan");
+                    return this.riwayatList.filter(
+                        (item) => item.type === "pembinaan",
+                    );
                 }
                 return this.riwayatList;
             },
@@ -1820,7 +1824,7 @@ document.addEventListener("alpine:init", () => {
             formPembinaan: {
                 tindakan: "",
                 feedback: "",
-                pengurangan_poin: 0
+                pengurangan_poin: 0,
             },
             isLoadingPembinaan: false,
 
@@ -2117,7 +2121,7 @@ document.addEventListener("alpine:init", () => {
                     this.formPembinaan = {
                         tindakan: "",
                         feedback: "",
-                        pengurangan_poin: mode === "tindakSP" ? 0 : "" // SP tidak ngurangin poin
+                        pengurangan_poin: mode === "tindakSP" ? 0 : "", // SP tidak ngurangin poin
                     };
                 }
 
@@ -2129,7 +2133,7 @@ document.addEventListener("alpine:init", () => {
                 this.drawerOpen = true;
             },
 
-                async loadRiwayat(studentId) {
+            async loadRiwayat(studentId) {
                 this.isLoadingRiwayat = true;
                 this.riwayatList = [];
                 try {
@@ -2283,7 +2287,7 @@ document.addEventListener("alpine:init", () => {
                 }
             },
 
-// ================= SUBMIT PEMBINAAN & SP =================
+            // ================= SUBMIT PEMBINAAN & SP =================
             async submitPembinaan() {
                 if (!this.formPembinaan.tindakan) {
                     return Toast.fire({
@@ -2296,12 +2300,22 @@ document.addEventListener("alpine:init", () => {
 
                 try {
                     const formData = new FormData();
-                    formData.append("id_siswa", this.selectedStudent.id || this.selectedStudent.id_siswa);
+                    formData.append(
+                        "id_siswa",
+                        this.selectedStudent.id ||
+                            this.selectedStudent.id_siswa,
+                    );
                     formData.append("tindakan", this.formPembinaan.tindakan);
-                    formData.append("feedback", this.formPembinaan.feedback || "");
-                    
+                    formData.append(
+                        "feedback",
+                        this.formPembinaan.feedback || "",
+                    );
+
                     // Kalau ini mode SP dari kesiswaan, pengurangan poin selalu 0
-                    let poinKurang = this.drawerMode === 'tindakSP' ? 0 : (this.formPembinaan.pengurangan_poin || 0);
+                    let poinKurang =
+                        this.drawerMode === "tindakSP"
+                            ? 0
+                            : this.formPembinaan.pengurangan_poin || 0;
                     formData.append("pengurangan_poin", poinKurang);
 
                     const response = await fetch("/pembinaan/store", {
@@ -2316,7 +2330,9 @@ document.addEventListener("alpine:init", () => {
                     const data = await response.json();
 
                     if (!response.ok) {
-                        throw new Error(data.message || "Gagal menyimpan pembinaan");
+                        throw new Error(
+                            data.message || "Gagal menyimpan pembinaan",
+                        );
                     }
 
                     // Berhasil
@@ -2324,14 +2340,38 @@ document.addEventListener("alpine:init", () => {
 
                     // Update total poin siswa secara realtime di UI
                     if (data.total_poin !== undefined) {
-                        this.updateSiswaPoin(this.selectedStudent.id || this.selectedStudent.id_siswa, data.total_poin);
+                        this.updateSiswaPoin(
+                            this.selectedStudent.id ||
+                                this.selectedStudent.id_siswa,
+                            data.total_poin,
+                        );
+                    }
+
+                    if (
+                        this.drawerMode === "tindakSP" ||
+                        this.formPembinaan.tindakan.includes("SP ")
+                    ) {
+                        this.selectedStudent.sp_status =
+                            this.formPembinaan.tindakan;
+
+                        if (!this.selectedStudent.sp_history) {
+                            this.selectedStudent.sp_history = [];
+                        }
+
+                        if (data.data_baru) {
+                            this.selectedStudent.sp_history.unshift(
+                                data.data_baru,
+                            );
+                        }
                     }
 
                     Toast.fire({
                         icon: "success",
-                        title: this.drawerMode === 'tindakSP' ? "Surat Peringatan dicatat!" : "Pembinaan berhasil dicatat!",
+                        title:
+                            this.drawerMode === "tindakSP"
+                                ? "Surat Peringatan dicatat!"
+                                : "Pembinaan berhasil dicatat!",
                     });
-
                 } catch (error) {
                     Toast.fire({
                         icon: "error",

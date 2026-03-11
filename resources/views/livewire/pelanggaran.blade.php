@@ -276,10 +276,14 @@
                                 NIS: <span x-text="student.nis"></span>
                             </div>
 
-                            <div class="mt-3">
+                            <div class="mt-3 flex flex-wrap gap-2">
                                 <span
                                     class="inline-flex px-2.5 py-0.5 rounded-lg text-xs font-medium bg-indigo-50 text-indigo-700 border border-indigo-100"
                                     x-text="student.class"></span>
+                                
+                                <span x-show="student.sp_status" @click="openDrawer('riwayatSP', student)"
+                                    class="inline-flex px-2.5 py-0.5 rounded-lg text-xs font-bold bg-red-100 text-red-700 border border-red-200 cursor-pointer hover:bg-red-200 hover:shadow-sm transition"
+                                    x-text="student.sp_status"></span>
                             </div>
                         </div>
 
@@ -383,6 +387,48 @@
                     class="px-3 py-2 rounded-md border border-gray-200 bg-white text-gray-500 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition">
                     <i data-lucide="chevron-right" class="w-4 h-4"></i>
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <div x-show="drawerOpen && drawerMode === 'riwayatSP'" class="relative z-50" style="z-index: 100; display: none;">
+        <div x-show="drawerOpen" @click="drawerOpen = false" class="fixed inset-0 bg-[#37517e]/20 backdrop-blur-sm transition-opacity"></div>
+        <div x-show="drawerOpen" class="fixed inset-y-0 right-0 w-full sm:w-[500px] bg-white shadow-2xl flex flex-col h-full border-l border-gray-100"
+            x-transition:enter="transition transform ease-out duration-300" x-transition:enter-start="translate-x-full" x-transition:enter-end="translate-x-0"
+            x-transition:leave="transition transform ease-in duration-200" x-transition:leave-start="translate-x-0" x-transition:leave-end="translate-x-full">
+
+            <div class="px-6 py-5 border-b border-gray-100 flex items-start justify-between bg-red-50/50">
+                <div class="pr-4">
+                    <h2 class="text-xl font-bold text-red-700">Riwayat Surat Peringatan</h2>
+                    <p class="text-sm text-gray-500 mt-2">
+                        <span x-text="selectedStudent?.name"></span> - <span class="font-mono" x-text="selectedStudent?.nis"></span>
+                    </p>
+                </div>
+                <button @click="drawerOpen = false" class="p-2 text-gray-400 hover:text-red-500 transition hover:bg-red-50 rounded-lg shrink-0">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <div class="flex-1 overflow-y-auto p-6 space-y-4">
+                <template x-for="item in selectedStudent?.sp_history || []" :key="item.id_pembinaan">
+                    <div class="border border-red-100 bg-red-50/30 rounded-xl p-4 transition hover:shadow-md hover:border-red-300">
+                        <div class="flex items-start justify-between mb-2">
+                            <h4 class="font-bold text-red-800" x-text="item.tindakan"></h4>
+                        </div>
+                        <p class="text-sm text-gray-700 mb-3" x-text="item.feedback || 'Tidak ada catatan.'"></p>
+                        
+                        <div class="flex items-center justify-between text-xs text-red-600">
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="calendar" class="w-3.5 h-3.5"></i>
+                                <span x-text="formatDate(item.created_at)"></span>
+                            </div>
+                            <div class="flex items-center gap-1" x-show="item.dibina_oleh">
+                                <i data-lucide="user" class="w-3.5 h-3.5"></i>
+                                <span x-text="item.dibina_oleh"></span>
+                            </div>
+                        </div>
+                    </div>
+                </template>
             </div>
         </div>
     </div>
@@ -826,7 +872,8 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1.5">Pengurangan Poin (Reward Taubat)</label>
                     <input type="number" x-model="formPembinaan.pengurangan_poin" min="0" :max="selectedStudent?.total_poin ?? 0" class="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all text-sm bg-white" placeholder="Contoh: 5">
-                    <p class="text-xs text-gray-500 mt-1">Isi 0 jika tidak ada pengurangan poin.</p>
+                    <p x-show="Number(formPembinaan.pengurangan_poin || 0) <= (selectedStudent?.total_poin ?? 0)" class="text-xs text-gray-500 mt-1">Isi 0 jika tidak ada pengurangan poin.</p>
+                    <p x-show="Number(formPembinaan.pengurangan_poin || 0) > (selectedStudent?.total_poin ?? 0)" class="text-xs text-red-600 mt-1 font-semibold">Pengurangan poin tidak boleh melebihi poin siswa saat ini!</p>
                 </div>
             </div>
 
@@ -834,7 +881,7 @@
                 <button @click="drawerOpen = false" class="flex-1 px-4 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-xl font-medium hover:bg-gray-100 transition shadow-sm">Batal</button>
                 
                 <button @click="submitPembinaan()" 
-                    :disabled="(typeof isLoadingPembinaan !== 'undefined' && isLoadingPembinaan) || (typeof formPembinaan !== 'undefined' && !formPembinaan.tindakan)" 
+                    :disabled="(typeof isLoadingPembinaan !== 'undefined' && isLoadingPembinaan) || (typeof formPembinaan !== 'undefined' && (!formPembinaan.tindakan || Number(formPembinaan.pengurangan_poin || 0) > (selectedStudent?.total_poin ?? 0)))" 
                     class="flex-[2] px-4 py-2.5 bg-emerald-600 text-white rounded-xl font-medium hover:bg-emerald-700 shadow-lg shadow-emerald-600/20 transition flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
                     <i x-show="typeof isLoadingPembinaan === 'undefined' || !isLoadingPembinaan" data-lucide="save" class="w-4 h-4"></i>
                     <svg x-show="typeof isLoadingPembinaan !== 'undefined' && isLoadingPembinaan" class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
